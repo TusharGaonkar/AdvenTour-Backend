@@ -1,4 +1,11 @@
 import mongoose from 'mongoose';
+
+process.on('uncaughtException', (err: Error) => {
+  console.log(err.name, err.message);
+  console.log('UNCAUGHT EXCEPTION ⛔! , Shutting down the server!');
+  process.exit(1);
+});
+
 import app from './index';
 
 const password = process.env.DB_PASSWORD;
@@ -14,3 +21,9 @@ mongoose
 const port = process.env.PORT || 5000;
 
 app.listen(port, () => console.log(`Server is running on port ${port} 🚀`));
+
+process.on('unhandledRejection', (err: Error) => {
+  console.log(err.name, err.message);
+  console.log('UNHANDLED REJECTION ⛔! , Shutting down the server!');
+  process.exit(1);
+});
