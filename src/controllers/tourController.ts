@@ -1,10 +1,12 @@
 import Tour from '../models/tourModel';
 import { Request, Response } from 'express';
 import AdvenTourQueryBuilder from '../utils/adventourQueryBuilder';
+import apiClientErrorHandler from '../middlewares/apiClientErrorHandler';
+import AdentourAppError from '../utils/adventourAppError';
 
 //Creates a single tour
-export const createSingleTour = async (req: Request, res: Response) => {
-  try {
+export const createSingleTour = apiClientErrorHandler(
+  async (req: Request, res: Response) => {
     const tourData = req.body;
     const newTour = await Tour.create(tourData);
     res.status(201).json({
@@ -13,17 +15,12 @@ export const createSingleTour = async (req: Request, res: Response) => {
         tour: newTour,
       },
     });
-  } catch (error) {
-    res.status(400).json({
-      status: 'fail',
-      message: error,
-    });
   }
-};
+);
 
 // Create multiple tours , pass array of tour objects
-export const createMultipleTours = async (req: Request, res: Response) => {
-  try {
+export const createMultipleTours = apiClientErrorHandler(
+  async (req: Request, res: Response) => {
     const tourData = req.body;
     const newTours = await Tour.insertMany(tourData);
     res.status(201).json({
@@ -32,16 +29,12 @@ export const createMultipleTours = async (req: Request, res: Response) => {
         tour: newTours,
       },
     });
-  } catch (error) {
-    res.status(400).json({
-      status: 'fail',
-      message: error,
-    });
   }
-};
+);
 
-export const getAllTours = async (req: Request, res: Response) => {
-  try {
+// Advanced query builder for the get route
+export const getAllTours = apiClientErrorHandler(
+  async (req: Request, res: Response, next) => {
     const sanitizedQueryObj = await new AdvenTourQueryBuilder(req, Tour)
       .filterData()
       .sortData('createdAt')
@@ -57,16 +50,12 @@ export const getAllTours = async (req: Request, res: Response) => {
         tours: tourList,
       },
     });
-  } catch (error) {
-    res.status(500).json({
-      status: 'fail',
-      message: error,
-    });
   }
-};
+);
 
-export const getTourWithId = async (req: Request, res: Response) => {
-  try {
+//get a single tour with an id
+export const getTourWithId = apiClientErrorHandler(
+  async (req: Request, res: Response) => {
     const { id } = req.params;
     const tour = await Tour.findById(id);
     res.status(200).json({
@@ -75,16 +64,12 @@ export const getTourWithId = async (req: Request, res: Response) => {
         tour,
       },
     });
-  } catch (error) {
-    res.status(404).json({
-      status: 'fail',
-      message: error,
-    });
   }
-};
+);
 
-export const updateTourWithId = async (req: Request, res: Response) => {
-  try {
+//update a single tour with an id
+export const updateTourWithId = apiClientErrorHandler(
+  async (req: Request, res: Response) => {
     const { id } = req.params;
     const tour = await Tour.findByIdAndUpdate(id, req.body, {
       new: true, //if true, return the modified document
@@ -97,16 +82,12 @@ export const updateTourWithId = async (req: Request, res: Response) => {
         tour,
       },
     });
-  } catch (error) {
-    res.status(400).json({
-      status: 'fail',
-      message: error,
-    });
   }
-};
+);
 
-export const deleteTourWithId = async (req: Request, res: Response) => {
-  try {
+// delete a single tour with an id
+export const deleteTourWithId = apiClientErrorHandler(
+  async (req: Request, res: Response) => {
     const { id } = req.params;
     const deletedTour = await Tour.findByIdAndDelete(id);
 
@@ -116,10 +97,5 @@ export const deleteTourWithId = async (req: Request, res: Response) => {
       status: 'success',
       data: null,
     });
-  } catch (error) {
-    res.status(400).json({
-      status: 'fail',
-      message: error,
-    });
   }
-};
+);
