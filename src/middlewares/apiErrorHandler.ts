@@ -31,7 +31,7 @@ const apiErrorHandler = (
   const serverError = new AdentourAppError(
     error.message ?? 'Something went wrong',
     //throw generic server fail error code if not present!
-    error.statusCode ?? 500
+    error.statusCode ?? error.status ?? 500 // error.status for passport errors 401 ;
   );
   if (process.env.NODE_ENV === 'production') {
     handleProductionErrors(serverError, res);
