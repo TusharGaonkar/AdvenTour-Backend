@@ -1,4 +1,4 @@
-export default class AdentourAppError extends Error {
+export default class AdventourAppError extends Error {
   private readonly _isClientError: Boolean;
   private readonly _status: 'fail' | 'error';
   private readonly _statusCode: number;
@@ -8,7 +8,7 @@ export default class AdentourAppError extends Error {
     this._status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
     this._isClientError = this._status === 'fail' ? true : false;
     // typescript error doesn't set the prototype automatically!!
-    Object.setPrototypeOf(this, AdentourAppError.prototype);
+    Object.setPrototypeOf(this, AdventourAppError.prototype);
     Error.captureStackTrace(this, this.constructor);
     // add stack trace to this instance,make sure to hide the constructor from the stack trace as it shows up by default
   }
