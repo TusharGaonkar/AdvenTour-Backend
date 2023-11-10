@@ -13,14 +13,14 @@ const googleStrategy = new Strategy(options, async function (
   _accessToken,
   _refreshToken,
   profile,
-  cb
+  callback
 ) {
   const { name: userName, email, picture: avatar } = profile._json;
 
   try {
     const existingUser = await Users.findOne({ email, authProvider: 'google' });
 
-    if (existingUser) return cb(null, existingUser);
+    if (existingUser) return callback(null, existingUser);
 
     const newUser = await Users.create({
       userName,
@@ -29,9 +29,9 @@ const googleStrategy = new Strategy(options, async function (
       authProvider: 'google',
     });
 
-    return cb(null, newUser);
+    return callback(null, newUser);
   } catch (error) {
-    return cb(error);
+    return callback(error);
   }
 });
 
