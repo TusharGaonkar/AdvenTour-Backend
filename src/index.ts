@@ -10,9 +10,9 @@ import express from 'express';
 import morgan from 'morgan';
 import addRequestTime from './middlewares/addRequestTime';
 import tourRouter from './routers/tourRouter';
-import AdentourAppError from './utils/adventourAppError';
+import authenticateRouter from './routers/authenticateRouter';
+import AdventourAppError from './utils/adventourAppError';
 import apiErrorHandler from './middlewares/apiErrorHandler';
-import passport from './authentication/passport'; // just import the passport conf , strategies already configured
 
 const app = express();
 
@@ -26,15 +26,12 @@ app.use(cookieParser()); // need to parse cookies in req.cookies
 app.use(express.json());
 app.use(addRequestTime);
 
+app.use('/api/v-1.0/auth', authenticateRouter);
 app.use('/api/v-1.0/tours', tourRouter);
-app.post(
-  '/api/v-1.0/login',
-  passport.authenticate('jwt', { session: false, failWithError: true }),
-  (req, res) => console.log(req)
-);
+
 app.use('*', (req, res, next) => {
   next(
-    new AdentourAppError(
+    new AdventourAppError(
       `No route found for ${req.originalUrl} on this server!`,
       404
     )
