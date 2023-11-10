@@ -2,7 +2,7 @@ import Tour from '../models/tourModel';
 import { Request, Response } from 'express';
 import AdvenTourQueryBuilder from '../utils/adventourQueryBuilder';
 import apiClientErrorHandler from '../middlewares/apiClientErrorHandler';
-import AdentourAppError from '../utils/adventourAppError';
+import AdventourAppError from '../utils/adventourAppError';
 
 //Creates a single tour
 export const createSingleTour = apiClientErrorHandler(

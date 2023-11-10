@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-
 type CallbackFnType = (
   req: Request,
   res: Response,
@@ -12,6 +11,7 @@ type ErrorHandlerWrapperType = (
   next: NextFunction
 ) => Promise<any>;
 
+// Only use apiClientErrorHandler to handle errors in  async functions , for sync function errors just throw new AdentourAppError() with custom error codes;
 const apiClientErrorHandler = (
   callbackFn: CallbackFnType
 ): ErrorHandlerWrapperType => {
