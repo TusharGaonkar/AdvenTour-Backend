@@ -4,18 +4,13 @@ import {
   StrategyOptions,
   VerifiedCallback,
 } from 'passport-jwt';
-import passport from 'passport';
+import Users from '../models/userModel';
 import { Request } from 'express';
-
-const verify = (payload: any, callback: VerifiedCallback) => {
-  return callback(null, payload, 'working properly');
-};
 
 const extractTokenFromCookie = (req: Request) => {
   let token = null;
-  const tokenKey = 'adventourJwtToken';
+  const tokenKey = process.env.JWT_TOKEN_KEY;
   if (req?.cookies) {
-    console.log(req.cookies);
     token = req.cookies[tokenKey];
   }
 
@@ -29,6 +24,21 @@ const options: StrategyOptions = {
     extractTokenFromCookie,
   ]),
   secretOrKey: process.env.JWT_SECRET,
+};
+
+const verify = async (payload: any, callback: VerifiedCallback) => {
+  try {
+    const { userName, email } = payload;
+
+    const user = await Users.findOne({ userName, email });
+
+    if (!user) {
+      return callback(null, false);
+    }
+    return callback(null, user);
+  } catch (error) {
+    return callback(error, false);
+  }
 };
 
 const jwtStrategy = new Strategy(options, verify);
