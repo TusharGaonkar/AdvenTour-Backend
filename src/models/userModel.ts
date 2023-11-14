@@ -1,4 +1,4 @@
-import mongoose, { InferSchemaType } from 'mongoose';
+import mongoose, { HydratedDocument, InferSchemaType, Query } from 'mongoose';
 import validation from 'validator';
 import bcrypt from 'bcrypt';
 import jsonwebtoken from 'jsonwebtoken';
@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true,
     minLength: [6, 'Password must be at least 6 characters'],
-    maxLength: [40, 'Password must be at most 40 characters'],
+    maxLength: [60, 'Password must be at most 40 characters'], //bcrypt module produces 60 characters hash!
     select: false,
     required: function () {
       return this.authProvider === 'adventour';
@@ -59,12 +59,6 @@ const userSchema = new mongoose.Schema({
     select: false,
   },
 
-  passwordLastUpdatedAt: {
-    type: Date,
-    default: Date.now(),
-    select: false,
-  },
-
   role: {
     type: String,
     enum: {
@@ -79,7 +73,12 @@ const userSchema = new mongoose.Schema({
     select: false,
   },
   passwordResetExpires: {
-    type: String,
+    type: Date,
+    select: false,
+  },
+  passwordLastUpdatedAt: {
+    type: Date,
+    default: Date.now(),
     select: false,
   },
 });
@@ -113,12 +112,18 @@ userSchema.methods.comparePassword = async function (
 userSchema.pre('save', async function (next) {
   try {
     if (this.isModified('password')) {
-      this.password = await hashDBPassword(this.password);
+      this.password = await hashDBPassword(this.password.trim());
       this.passwordLastUpdatedAt = new Date(Date.now());
     }
+    await this.validate(); // schema validators don't run on pre-save if u skip
     next();
   } catch (error) {
-    next(new AdventourAppError('Error while hashing password', 500));
+    next(
+      new AdventourAppError(
+        error.message ?? 'Error while hashing password',
+        500
+      )
+    );
   }
 });
 
