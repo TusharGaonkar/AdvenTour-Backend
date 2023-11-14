@@ -11,6 +11,7 @@ import morgan from 'morgan';
 import addRequestTime from './middlewares/addRequestTime';
 import tourRouter from './routers/tourRouter';
 import authenticateRouter from './routers/authenticateRouter';
+import tourReviewRouter from './routers/tourReviewRouter';
 import AdventourAppError from './utils/adventourAppError';
 import apiErrorHandler from './middlewares/apiErrorHandler';
 
@@ -28,6 +29,7 @@ app.use(addRequestTime);
 
 app.use('/api/v-1.0/auth', authenticateRouter);
 app.use('/api/v-1.0/tours', tourRouter);
+app.use('/api/v-1.0/tourReviews', tourReviewRouter);
 
 app.use('*', (req, res, next) => {
   next(
