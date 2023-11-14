@@ -8,9 +8,20 @@ import {
 
 import express from 'express';
 
+import requiresAuthentication from '../middlewares/authenticationHandler';
+import requiresAuthorization from '../middlewares/authorizationHandler';
+
 const tourRouter = express.Router();
 
-tourRouter.route('/').get(getAllTours).post(createSingleTour);
+// GET is public , posting required authentication!
+tourRouter
+  .route('/')
+  .get(getAllTours)
+  .post(
+    requiresAuthentication,
+    requiresAuthorization(['user', 'admin']),
+    createSingleTour
+  );
 
 tourRouter
   .route('/:tourID')
