@@ -4,6 +4,8 @@ import AdventourAppError from '../utils/adventourAppError';
 import { HydratedDocument } from 'mongoose';
 import loginUser from '../controllers/loginUserController';
 import registerNewUser from '../controllers/registerNewUserController';
+import forgotPassword from '../controllers/forgotPasswordController';
+import resetPassword from '../controllers/resetPasswordController';
 
 const authenticateRouter = express.Router();
 
@@ -44,5 +46,8 @@ authenticateRouter.route('/google/callback').get(
 authenticateRouter.route('/google/failure').get((req, res, next) => {
   next(new AdventourAppError('Google Authentication Failed', 401));
 });
+
+authenticateRouter.route('/forgotPassword').post(forgotPassword);
+authenticateRouter.route('/resetPassword').post(resetPassword);
 
 export default authenticateRouter;
