@@ -12,6 +12,11 @@ const registerNewUser = apiClientErrorHandler(
         'Please provide userName, email and password in the request!',
         400
       );
+    } else if (password.length < 6) {
+      throw new AdventourAppError(
+        'Password should be at least 6 characters long!',
+        400
+      );
     }
 
     const existingUser = await Users.findOne({ email });
