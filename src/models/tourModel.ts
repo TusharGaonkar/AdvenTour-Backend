@@ -66,7 +66,7 @@ const tourSchema = new mongoose.Schema({
 
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Users',
     required: [true, 'Created by is required'],
   },
 
@@ -277,7 +277,7 @@ const tourSchema = new mongoose.Schema({
 });
 
 const Tour = mongoose.model<InferSchemaType<typeof tourSchema>>(
-  'Tour',
+  'Tours',
   tourSchema
 );
 
