@@ -11,6 +11,7 @@ export const createSingleTour = apiClientErrorHandler(
     const newTour = await Tour.create(tourData);
     res.status(201).json({
       status: 'success',
+      totalResults: 1,
       data: {
         tour: newTour,
       },
@@ -25,6 +26,7 @@ export const createMultipleTours = apiClientErrorHandler(
     const newTours = await Tour.insertMany(tourData);
     res.status(201).json({
       status: 'success',
+      totalResults: newTours.length,
       data: {
         tour: newTours,
       },
@@ -60,6 +62,7 @@ export const getTourWithId = apiClientErrorHandler(
     const tour = await Tour.findById(id);
     res.status(200).json({
       status: 'success',
+      totalResults: 1,
       data: {
         tour,
       },
@@ -78,6 +81,7 @@ export const updateTourWithId = apiClientErrorHandler(
 
     res.status(200).json({
       status: 'success',
+      totalResults: 1,
       data: {
         tour,
       },
