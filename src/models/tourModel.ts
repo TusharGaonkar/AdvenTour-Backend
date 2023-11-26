@@ -1,4 +1,5 @@
 import mongoose, { InferSchemaType } from 'mongoose';
+import validation from 'validator';
 
 const tourSchema = new mongoose.Schema({
   title: {
@@ -220,31 +221,53 @@ const tourSchema = new mongoose.Schema({
             'Itinerary description should not exceed 300 characters',
           ],
         },
-        image: {
-          type: [String],
-          trim: true,
-        },
-        locations: [
+        activities: [
           {
-            type: {
+            activityName: {
               type: String,
-              default: 'Point',
-              enum: ['Point'],
+              required: [true, 'Activity name is required'],
+              minlength: [
+                6,
+                'Activity name should be at least 6 characters long',
+              ],
+              maxLength: [50, 'Activity name should not exceed 50 characters'],
             },
-            coordinates: {
-              type: [[Number]],
-              validate: {
-                validator: function (coordinates: number[][]) {
-                  return coordinates.every(
-                    (coordinate: number[]) => coordinate.length === 2
-                  );
+            place: {
+              type: String,
+              required: [true, 'Place is required'],
+              minLength: [2, 'Place should be at least 2 characters long'],
+              maxLength: [50, 'Place should not exceed 50 characters'],
+            },
+            location: {
+              type: {
+                type: String,
+                default: 'Point',
+                enum: ['Point'],
+              },
+              coordinates: {
+                type: [Number],
+                validate: {
+                  validator: function (coordinates: number[]) {
+                    return coordinates.length === 2;
+                  },
+                  message:
+                    'Location should have two coordinates (latitude and longitude).',
                 },
-                message:
-                  'Location should have two coordinates (latitude and longitude).',
+              },
+            },
+            image: {
+              type: String,
+              validate: {
+                validator: function (url: string) {
+                  // Assuming 'validation.isURL' is a custom validation function or a library function
+                  return validation.isURL(url);
+                },
+                message: 'Please provide a valid URL for the image.',
               },
             },
           },
         ],
+
         foodIncluded: {
           type: String,
           required: [true, 'Food information is required'],
