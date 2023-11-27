@@ -6,6 +6,7 @@ dotenv.config({
 });
 
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import express from 'express';
 import morgan from 'morgan';
 import addRequestTime from './middlewares/addRequestTime';
@@ -24,6 +25,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.use(cookieParser()); // need to parse cookies in req.cookies
+app.use(cors({ credentials: true, origin: 'http://localhost:5173' }));
 app.use(express.json());
 app.use(addRequestTime);
 
