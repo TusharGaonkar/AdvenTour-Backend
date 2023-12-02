@@ -53,6 +53,12 @@ const tourSchema = new mongoose.Schema({
         message: 'Coordinates must be an array with latitude and longitude',
       },
     },
+
+    address: {
+      type: String,
+      required: [true, 'Address is required'],
+      trim: true,
+    },
   },
 
   createdAt: {
@@ -277,10 +283,6 @@ const tourSchema = new mongoose.Schema({
           type: String,
           required: [true, 'Accommodation information is required'],
         },
-
-        tourTags: {
-          type: [String],
-        },
       },
     ],
   },
@@ -296,6 +298,10 @@ const tourSchema = new mongoose.Schema({
     default: 0,
     min: [0, 'Ratings average should be at least 0'],
     max: [5, 'Ratings average should not exceed 5'],
+  },
+
+  tourCategory: {
+    type: [String],
   },
 });
 
