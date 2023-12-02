@@ -6,6 +6,10 @@ import loginUser from '../controllers/loginUserController';
 import registerNewUser from '../controllers/registerNewUserController';
 import forgotPassword from '../controllers/forgotPasswordController';
 import resetPassword from '../controllers/resetPasswordController';
+import {
+  successResponse,
+  verifyToken,
+} from '../controllers/verifyTokenController';
 
 const authenticateRouter = express.Router();
 
@@ -49,5 +53,6 @@ authenticateRouter.route('/google/failure').get((req, res, next) => {
 
 authenticateRouter.route('/forgotPassword').post(forgotPassword);
 authenticateRouter.route('/resetPassword').post(resetPassword);
+authenticateRouter.route('/verifyToken').get(verifyToken, successResponse);
 
 export default authenticateRouter;
