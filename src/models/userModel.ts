@@ -8,10 +8,12 @@ const userSchema = new mongoose.Schema({
   userName: {
     type: String,
     required: true,
+    trim: true,
     validator: {
       validate: validation.isAlpha,
       message: 'Name can only contain letters',
     },
+    maxLength: [, 'Name must be at least 50 characters'],
   },
 
   email: {
