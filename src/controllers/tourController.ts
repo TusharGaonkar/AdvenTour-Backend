@@ -37,9 +37,10 @@ export const createMultipleTours = apiClientErrorHandler(
 // Advanced query builder for the get route
 export const getAllTours = apiClientErrorHandler(
   async (req: Request, res: Response, next) => {
-    const sanitizedQueryObj = await new AdvenTourQueryBuilder(req, Tour)
+    const sanitizedQueryObj = new AdvenTourQueryBuilder(req, Tour)
+      .searchData()
       .filterData()
-      .sortData('createdAt')
+      .sortData()
       .projectFields()
       .paginate();
 
