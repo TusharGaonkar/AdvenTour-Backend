@@ -1,87 +1,152 @@
 import { Request } from 'express';
-import { Model, Query } from 'mongoose';
+import { Model, PipelineStage } from 'mongoose';
 import { cloneDeep } from 'lodash';
 
-/*
-@param {Object} reqQuery -> Request Object
-@param {Object} model -> Mongoose Model
-returns Mongoose Query Object
-*/
-
-//Custom query builder for our api..
+interface ModifiedRequest extends Request {
+  query: Record<string, any>;
+}
 
 export default class AdvenTourQueryBuilder {
-  protected reqQueryObj: Request;
-  protected modifiedReqQueryObj: Request;
-  protected sanitizedQuery: Query<Record<string, any>, any>;
+  protected reqQueryObj: ModifiedRequest;
+  protected modifiedReqQueryObj: ModifiedRequest;
+  protected pipeline: PipelineStage[] = [];
   protected model: Model<Record<string, any>>;
 
   constructor(reqQuery: Request, model: Model<Record<string, any>>) {
-    this.reqQueryObj = cloneDeep(reqQuery);
-    this.modifiedReqQueryObj = cloneDeep(reqQuery);
+    this.reqQueryObj = cloneDeep(reqQuery) as ModifiedRequest;
+    this.modifiedReqQueryObj = cloneDeep(reqQuery) as ModifiedRequest;
     this.model = model;
   }
 
-  // first remove sort , limit , page and fields from the url
   public filterData() {
-    const filters = ['sort', 'limit', 'page', 'fields'];
+    const filters = ['sort', 'limit', 'page', 'fields', 'search'];
     filters.forEach((filter) => delete this.modifiedReqQueryObj.query[filter]);
 
-    // Advanced filtering example of the call api/v-1.0/tours?duration[gt]=2&priceInRupee[lte]=6000
     const reqQueryString = JSON.stringify(
       this.modifiedReqQueryObj.query
-    ).replace(/\b(lt|lte|gt|gte)/g, (matchedString) => `$${matchedString}`);
-    // replace {duration : {gte :600}} to {duration : {$gte : 600} \b only matches starting with 'lt' or 'lte' etc
+    ).replace(
+      /\b(lt|lte|gt|gte|in)\b/g,
+      (matchedString) => `$${matchedString}`
+    );
 
-    this.modifiedReqQueryObj.query = JSON.parse(reqQueryString);
-    this.sanitizedQuery = this.model.find(this.modifiedReqQueryObj.query);
+    this.modifiedReqQueryObj.query = JSON.parse(
+      reqQueryString,
+      function (key, value) {
+        if (key === '$in') {
+          console.log(value);
+
+          if (value.length > 0) {
+            const parsedArray = value.split(',');
+            return parsedArray.map((item: string) => {
+              const numOfDays = parseInt(item, 10);
+              if (!isNaN(numOfDays)) {
+                return numOfDays;
+              }
+              return item;
+            });
+          }
+          return value;
+        }
+        if (
+          key === '$lt' ||
+          key === '$lte' ||
+          key === '$gt' ||
+          key === '$gte'
+        ) {
+          return parseInt(value, 10);
+        }
+        console.log('filterstage', this.pipeline);
+        return value;
+      }
+    );
+    console.log(this.modifiedReqQueryObj.query);
+    this.pipeline.push({
+      $match: this.modifiedReqQueryObj.query,
+    });
+
     return this;
   }
 
-  public sortData(defaultSortingCriteria: string | undefined = undefined) {
+  public sortData() {
     if (this.reqQueryObj.query.sort) {
-      const sortCriteria = (this.reqQueryObj.query.sort as string)
-        .split(',')
-        .join(' ');
-      this.sanitizedQuery = this.sanitizedQuery.sort(sortCriteria);
+      const { sort } = this.reqQueryObj.query;
+      const convertedSort: Record<string, any> = {};
+
+      for (const key in sort) {
+        const value = parseInt(sort[key], 10);
+        if (!isNaN(value) && (value === -1 || value === 1)) {
+          convertedSort[key] = value;
+        }
+      }
+
+      this.pipeline.push({
+        $sort: convertedSort,
+      });
     }
-    //  {sort : "difficulty,priceInRupee"} => model.sort("difficulty priceInRupee")
-    if (defaultSortingCriteria)
-      this.sanitizedQuery = this.sanitizedQuery.sort(defaultSortingCriteria);
+
     return this;
   }
 
-  public projectFields(defaultProjectFields: string | undefined = undefined) {
-    if (this.reqQueryObj.query.fields) {
-      const projectFields = (this.reqQueryObj.query.fields as string)
-        .split(',')
-        .join(' ');
-      this.sanitizedQuery = this.sanitizedQuery.select(projectFields);
+  public projectFields() {
+    if (
+      typeof this.reqQueryObj.query.fields === 'string' &&
+      this.reqQueryObj.query.fields.length > 0
+    ) {
+      const fields = JSON.parse(this.reqQueryObj.query.fields).split(',');
+      const projectOptions: Record<string, number> = {};
+      for (const field of fields) {
+        projectOptions[field] = 1;
+      }
+
+      this.pipeline.push({
+        $project: projectOptions,
+      });
     }
-    if (defaultProjectFields)
-      this.sanitizedQuery = this.sanitizedQuery.select(defaultProjectFields);
+
     return this;
   }
 
-  public async paginate() {
+  public searchData() {
+    if (this.reqQueryObj.query.search) {
+      const { search } = this.reqQueryObj.query;
+
+      this.pipeline.push({
+        $search: {
+          index: 'searchTours',
+          text: {
+            query: search,
+            path: {
+              wildcard: '*',
+            },
+          },
+        },
+      });
+
+      console.log('searchstage', this.pipeline);
+    }
+    return this;
+  }
+  public paginate() {
     const defaultPage = 1;
-    const defaultLimit = 5;
+    const defaultLimit = 6;
     const requestedPage =
       parseInt(this.reqQueryObj.query.page as string, 10) || defaultPage;
-    const docsLimit =
+    const requestedLimit =
       parseInt(this.reqQueryObj.query.limit as string, 10) || defaultLimit;
-    const docsSkipped = (requestedPage - 1) * docsLimit;
+    const startIndex = (requestedPage - 1) * requestedLimit;
 
-    const currentTotalTours = await this.model.countDocuments();
-    if (docsSkipped >= currentTotalTours) throw new Error("Page doesn't exist");
-    this.sanitizedQuery = this.sanitizedQuery
-      .skip(docsSkipped)
-      .limit(docsLimit);
+    this.pipeline.push({
+      $skip: startIndex,
+    });
+
+    this.pipeline.push({
+      $limit: requestedLimit,
+    });
 
     return this;
   }
 
   public getQuery() {
-    return this.sanitizedQuery;
+    return this.model.aggregate(this.pipeline);
   }
 }
