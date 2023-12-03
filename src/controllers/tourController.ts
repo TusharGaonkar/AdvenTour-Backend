@@ -59,11 +59,11 @@ export const getAllTours = apiClientErrorHandler(
 //get a single tour with an id
 export const getTourWithId = apiClientErrorHandler(
   async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const tour = await Tour.findById(id);
+    const { tourID } = req.params;
+    const tour = await Tour.findById(tourID);
     res.status(200).json({
       status: 'success',
-      totalResults: 1,
+      totalResults: tour ? 1 : 0,
       data: {
         tour,
       },
