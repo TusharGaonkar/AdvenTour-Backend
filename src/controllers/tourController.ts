@@ -3,6 +3,17 @@ import { Request, Response } from 'express';
 import AdvenTourQueryBuilder from '../utils/adventourQueryBuilder';
 import apiClientErrorHandler from '../middlewares/apiClientErrorHandler';
 import AdventourAppError from '../utils/adventourAppError';
+import BookMarkedTours from '../models/bookmarkToursModel';
+
+interface User {
+  _id: string;
+  [key: string]: any;
+}
+
+interface ModifiedRequest extends Request {
+  user?: User;
+  [key: string]: any;
+}
 
 //Creates a single tour
 export const createSingleTour = apiClientErrorHandler(
@@ -36,13 +47,18 @@ export const createMultipleTours = apiClientErrorHandler(
 
 // Advanced query builder for the get route
 export const getAllTours = apiClientErrorHandler(
-  async (req: Request, res: Response, next) => {
-    const sanitizedQueryObj = new AdvenTourQueryBuilder(req, Tour)
+  async (req: ModifiedRequest, res: Response, next) => {
+    let sanitizedQueryObj = new AdvenTourQueryBuilder(req, Tour)
+      .getNearbyTours('tourLocation.coordinates')
       .searchData()
       .filterData()
       .sortData()
       .projectFields()
       .paginate();
+
+    if (req.user && req.user?._id) {
+      sanitizedQueryObj = await sanitizedQueryObj.addIsBookmarked(req.user?.id);
+    }
 
     const tourList = await sanitizedQueryObj.getQuery();
 
