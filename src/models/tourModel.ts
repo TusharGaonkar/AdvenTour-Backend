@@ -305,6 +305,9 @@ const tourSchema = new mongoose.Schema({
   },
 });
 
+// add indexing for geo-spatial queries
+tourSchema.index({ 'tourLocation.coordinates': '2dsphere' });
+
 const Tour = mongoose.model<InferSchemaType<typeof tourSchema>>(
   'Tours',
   tourSchema
