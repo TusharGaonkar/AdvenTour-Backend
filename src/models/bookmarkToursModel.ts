@@ -18,7 +18,7 @@ const bookmarkTourSchema = new mongoose.Schema({
   },
 });
 
-// ensure that a tour can only be bookmarked once by a given user don't save duplicates using compound indexes!
+//ensure that a tour can only be bookmarked once by a given user don't save duplicates using compound indexes!
 bookmarkTourSchema.index({ tour: 1, user: 1 }, { unique: true });
 
 const BookMarkedTours = mongoose.model<
