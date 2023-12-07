@@ -1,6 +1,7 @@
 import { Request } from 'express';
 import { Model, PipelineStage } from 'mongoose';
 import { cloneDeep } from 'lodash';
+import BookMarkedTours from '../models/bookmarkToursModel';
 
 interface ModifiedRequest extends Request {
   query: Record<string, any>;
@@ -19,7 +20,14 @@ export default class AdvenTourQueryBuilder {
   }
 
   public filterData() {
-    const filters = ['sort', 'limit', 'page', 'fields', 'search'];
+    const filters = [
+      'sort',
+      'limit',
+      'page',
+      'fields',
+      'search',
+      'getNearbyTours',
+    ];
     filters.forEach((filter) => delete this.modifiedReqQueryObj.query[filter]);
 
     const reqQueryString = JSON.stringify(
@@ -145,8 +153,48 @@ export default class AdvenTourQueryBuilder {
 
     return this;
   }
+  public async addIsBookmarked(userId: string) {
+    const getAllBookmarksByUser = await BookMarkedTours.find({
+      user: userId,
+    }).select('tour -_id');
 
+    const bookmarkedTours = getAllBookmarksByUser.map(
+      (bookmarkedTour) => bookmarkedTour.tour // first get all the bookmarked tours then use these ids to verify if the current tours is present in the bookmarked tours collection
+    );
+    this.pipeline.push({
+      $addFields: {
+        isBookmarked: {
+          $in: ['$_id', bookmarkedTours], // add this field in top of the remaining fields in the pipeline
+        },
+      },
+    });
+
+    return this;
+  }
+
+  public getNearbyTours(geoField: string) {
+    if (this.reqQueryObj.query.getNearbyTours) {
+      const { latitude, longitude } = this.reqQueryObj.query.getNearbyTours;
+      console.log(latitude + ' ' + longitude);
+      if (latitude && longitude) {
+        // @ts-ignore
+        this.pipeline.push({
+          $geoNear: {
+            near: {
+              type: 'Point',
+              coordinates: [parseFloat(longitude), parseFloat(latitude)],
+            },
+            key: geoField,
+            distanceField: 'distanceFromUser',
+            spherical: true,
+          },
+        });
+      }
+    }
+    return this;
+  }
   public getQuery() {
+    console.log(this.pipeline);
     return this.model.aggregate(this.pipeline);
   }
 }
