@@ -23,6 +23,12 @@ const tourSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Main cover image is required'],
     trim: true,
+    validate: {
+      validator: function (v: string) {
+        return validation.isURL(v);
+      },
+      message: 'Main cover image must be a valid URL',
+    },
   },
 
   additionalImages: {
@@ -30,7 +36,9 @@ const tourSchema = new mongoose.Schema({
     trim: true,
     validate: {
       validator: function (v: string[]) {
-        return v.length <= 10;
+        return (
+          v.length <= 10 && v.every((item: string) => validation.isURL(item))
+        );
       },
       message: 'You can have up to 10 additional images.',
     },
@@ -88,12 +96,6 @@ const tourSchema = new mongoose.Schema({
     required: [true, 'Tour start dates are required'],
   },
 
-  repeatsEachMonth: {
-    type: Boolean,
-    default: false,
-    required: [true, 'Repeats each month is required'],
-  },
-
   tourStartTime: {
     type: String,
     required: [true, 'Tour start time is required'],
@@ -102,7 +104,7 @@ const tourSchema = new mongoose.Schema({
   priceInRupees: {
     type: Number,
     required: [true, 'Price in Rupees is required'],
-    validator: {
+    validate: {
       validator: function (v: number) {
         return v > 0;
       },
@@ -147,7 +149,7 @@ const tourSchema = new mongoose.Schema({
     required: [true, 'Maximum people per booking is required'],
     validate: {
       validator: function (v: number) {
-        return v > 1 && v <= this.tourMaxCapacity;
+        return v > 0 && v <= this.tourMaxCapacity;
       },
       message:
         'Maximum people per booking should be greater than 0 and less than the tour capacity',
