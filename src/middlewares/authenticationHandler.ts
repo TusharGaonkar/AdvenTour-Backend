@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import AdventourAppError from '../utils/adventourAppError';
 import passport from '../authentication/passport';
 
 const requiresAuthentication = (
