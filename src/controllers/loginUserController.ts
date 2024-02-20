@@ -49,4 +49,12 @@ const loginUser = apiClientErrorHandler(async (req: Request, res: Response) => {
   });
 });
 
-export default loginUser;
+const logoutUser = apiClientErrorHandler(
+  async (req: Request, res: Response) => {
+    res.status(200).clearCookie(process.env.JWT_TOKEN_KEY).json({
+      status: 'success',
+      message: 'User Logged Out',
+    });
+  }
+);
+export { loginUser, logoutUser };
