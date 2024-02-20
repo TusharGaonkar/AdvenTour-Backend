@@ -3,6 +3,7 @@ import {
   createSingleTour,
   deleteTourWithId,
   getAllTours,
+  getTourCost,
   getTourWithId,
   updateTourWithId,
 } from '../controllers/tourController';
@@ -27,6 +28,9 @@ tourRouter
 // search autocomplete route!
 tourRouter.route('/suggestions').get(searchSuggestionsController);
 
+tourRouter.route('/getTourCost').get(getTourCost);
+
+//Place this below , else :tourID will be called for any route after tours/
 tourRouter
   .route('/:tourID')
   .get(getTourWithId)
