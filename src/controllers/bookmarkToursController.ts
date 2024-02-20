@@ -12,6 +12,7 @@ export const getUserBookmarks = apiClientErrorHandler(
 
       const getAllBookmarks = await BookMarkedTours.find({
         user: req.user._id,
+        tour: { $exists: true, $ne: null },
       }).populate({
         path: 'tour',
         select: '_id title mainCoverImage',
