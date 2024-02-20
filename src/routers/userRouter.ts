@@ -13,13 +13,17 @@ userRouter
   .route('/bookmarks')
   .get(
     requiresAuthentication,
-    requiresAuthorization(['user']),
+    requiresAuthorization(['user', 'local-guide', 'admin']),
     getUserBookmarks
   )
-  .post(requiresAuthentication, requiresAuthorization(['user']), createBookmark)
+  .post(
+    requiresAuthentication,
+    requiresAuthorization(['user', 'local-guide', 'admin']),
+    createBookmark
+  )
   .delete(
     requiresAuthentication,
-    requiresAuthorization(['user']),
+    requiresAuthorization(['user', 'local-guide', 'admin']),
     deleteBookmark
   );
 
