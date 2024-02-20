@@ -1,6 +1,8 @@
 import mongoose, { InferSchemaType } from 'mongoose';
 import validation from 'validator';
 
+const STATUS = ['pending', 'confirmed', 'failed'];
+
 const bookingSchema = new mongoose.Schema({
   tour: {
     type: mongoose.Schema.ObjectId,
@@ -14,7 +16,6 @@ const bookingSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now(),
     required: true,
   },
 
@@ -23,29 +24,49 @@ const bookingSchema = new mongoose.Schema({
     required: true,
   },
 
-  tourEndDate: {
-    type: Date,
-    required: true,
-  },
-
-  bookingAmountInRupees: {
+  tourDurationInDays: {
     type: Number,
     required: true,
-    min: [100, 'Booking cost must be greater than 100'],
   },
 
-  discountInRupees: {
+  expiresIn: {
     type: Number,
     required: true,
-    default: 0,
-    min: [0, 'Discount must be greater than 0'],
   },
 
-  isPaid: {
-    type: Boolean,
-    default: false,
+  status: {
+    type: String,
+    enum: STATUS,
+    default: 'pending',
+  },
+
+  bookingFor: {
+    type: Number,
     required: true,
   },
+
+  razorpay_order_id: {
+    type: String,
+    required: true,
+  },
+  razorpay_payment_id: {
+    type: String,
+    required: false,
+  },
+  totalCost: {
+    type: Number,
+    required: true,
+  },
+});
+
+// Index commonly queried fields in the booking controller to speed up queries
+bookingSchema.index({
+  tour: 1,
+  user: 1,
+  tourStartDate: 1,
+  bookingFor: 1,
+  status: 1,
+  expiresIn: 1,
 });
 
 const Bookings = mongoose.model<InferSchemaType<typeof bookingSchema>>(
