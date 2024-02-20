@@ -13,7 +13,10 @@ import addRequestTime from './middlewares/addRequestTime';
 import tourRouter from './routers/tourRouter';
 import authenticateRouter from './routers/authenticateRouter';
 import tourReviewRouter from './routers/tourReviewRouter';
+import tourValidationRouter from './routers/tourValidationRouter';
+import adminRouter from './routers/adminRouter';
 import userRouter from './routers/userRouter';
+import bookingsRouter from './routers/bookingsRouter';
 import AdventourAppError from './utils/adventourAppError';
 import apiErrorHandler from './middlewares/apiErrorHandler';
 
@@ -25,8 +28,9 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined'));
 }
 
-app.use(cookieParser()); // need to parse cookies in req.cookies
 app.use(cors({ credentials: true, origin: 'http://localhost:5173' }));
+app.use(cookieParser()); // need to parse cookies in req.cookies
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(addRequestTime);
 
@@ -34,6 +38,9 @@ app.use('/api/v-1.0/auth', authenticateRouter);
 app.use('/api/v-1.0/tours', tourRouter);
 app.use('/api/v-1.0/tourReviews', tourReviewRouter);
 app.use('/api/v-1.0/user', userRouter);
+app.use('/api/v-1.0/tourValidation', tourValidationRouter);
+app.use('/api/v-1.0/bookings', bookingsRouter);
+app.use('/api/v-1.0/admin', adminRouter);
 
 app.use('*', (req, res, next) => {
   next(
@@ -43,7 +50,6 @@ app.use('*', (req, res, next) => {
     )
   );
 });
-
 // Custom error handler middleware
 app.use(apiErrorHandler);
 
