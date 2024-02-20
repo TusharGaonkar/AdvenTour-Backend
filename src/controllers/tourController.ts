@@ -30,21 +30,6 @@ export const createSingleTour = apiClientErrorHandler(
   }
 );
 
-// Create multiple tours , pass array of tour objects
-export const createMultipleTours = apiClientErrorHandler(
-  async (req: Request, res: Response) => {
-    const tourData = req.body;
-    const newTours = await Tour.insertMany(tourData);
-    res.status(201).json({
-      status: 'success',
-      totalResults: newTours.length,
-      data: {
-        tour: newTours,
-      },
-    });
-  }
-);
-
 // Advanced query builder for the get route
 export const getAllTours = apiClientErrorHandler(
   async (req: ModifiedRequest, res: Response, next) => {
@@ -117,6 +102,63 @@ export const deleteTourWithId = apiClientErrorHandler(
     res.status(204).json({
       status: 'success',
       data: null,
+    });
+  }
+);
+
+export const getTourCost = apiClientErrorHandler(
+  async (req: Request, res: Response) => {
+    const {
+      tourID = '',
+      startDate,
+      peopleCount,
+    }: {
+      tourID: string;
+      startDate: string;
+      peopleCount: string;
+    } = (req.query as any) || {};
+
+    if (!startDate || !peopleCount || !tourID) {
+      throw new AdventourAppError(
+        'Please provide start date, number of people and tour id',
+        400
+      );
+    }
+
+    const tour: {
+      maxPeoplePerBooking: number;
+      priceInRupees: number;
+      discountInRupees: number;
+      tourStartDates: Date[];
+    } = await Tour.findById(tourID).select(
+      'priceInRupees tourStartDates maxPeoplePerBooking discountInRupees'
+    );
+
+    if (!tour) {
+      throw new AdventourAppError('Tour not found', 404);
+    } else if (tour.maxPeoplePerBooking < parseInt(peopleCount, 10)) {
+      throw new AdventourAppError('Maximum people per booking exceeded', 400);
+    } else if (
+      !tour.tourStartDates.some(
+        (date) => date.toDateString() === new Date(startDate).toDateString()
+      )
+    ) {
+      throw new AdventourAppError('Start date not available', 400);
+    }
+
+    const totalCost =
+      (tour.priceInRupees - tour.discountInRupees) * parseInt(peopleCount, 10);
+    const discount = (tour.discountInRupees ?? 0) * parseInt(peopleCount, 10);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        pricePerPerson: tour.priceInRupees,
+        totalCost,
+        discount,
+        bookingFor: parseInt(peopleCount, 10),
+        selectedDate: new Date(startDate).toDateString(),
+      },
     });
   }
 );
