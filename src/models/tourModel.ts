@@ -1,7 +1,9 @@
 import mongoose, { InferSchemaType } from 'mongoose';
 import validation from 'validator';
+import BookMarkedTours from './bookmarkToursModel';
+import AdventourAppError from '../utils/adventourAppError';
 
-const tourSchema = new mongoose.Schema({
+export const tourSchema = new mongoose.Schema({
   title: {
     type: String,
     required: [true, 'Title is required'],
@@ -15,7 +17,7 @@ const tourSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Description is required'],
     minLength: [15, 'Description must be at least 15 characters'],
-    maxLength: [300, 'Description must be at most 400 characters'],
+    maxLength: [500, 'Description must be at most 500 characters'],
     trim: true,
   },
 
@@ -31,16 +33,16 @@ const tourSchema = new mongoose.Schema({
     },
   },
 
-  additionalImages: {
+  additionalCoverImages: {
     type: [String],
     trim: true,
     validate: {
       validator: function (v: string[]) {
         return (
-          v.length <= 10 && v.every((item: string) => validation.isURL(item))
+          v.length === 2 && v.every((item: string) => validation.isURL(item))
         );
       },
-      message: 'You can have up to 10 additional images.',
+      message: 'You can have up to 2 additional images.',
     },
   },
 
@@ -183,12 +185,17 @@ const tourSchema = new mongoose.Schema({
   additionalInformation: {
     type: [String],
     trim: true,
+    required: false,
+    maxLength: [300, 'Additional information should not exceed 300 characters'],
   },
 
   cancellationPolicy: {
     type: [String],
-    required: [true, 'Cancellation policy is required'],
+    default: 'No cancellation policy',
     trim: true,
+    required: true,
+    minLength: [10, 'Cancellation policy should be at least 10 characters'],
+    maxLength: [300, 'Cancellation policy should not exceed 300 characters'],
   },
 
   FAQ: {
@@ -304,7 +311,25 @@ const tourSchema = new mongoose.Schema({
 
   tourCategory: {
     type: [String],
+    required: false,
   },
+});
+
+//  Delete referencing bookmark records when tour is deleted , else using .populate on 'tour' field result in null!
+tourSchema.post(/^delete/, async function (doc, next) {
+  try {
+    await BookMarkedTours.deleteMany({
+      tour: doc._id,
+    });
+    next();
+  } catch (error) {
+    next(
+      new AdventourAppError(
+        'Something went wrong while deleting referencing bookmark records',
+        500
+      )
+    );
+  }
 });
 
 // add indexing for geo-spatial queries
