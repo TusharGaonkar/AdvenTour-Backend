@@ -17,19 +17,15 @@ import { cancelAndRefundBooking } from '../controllers/admin-Cancel_RefundBookin
 import { getTourStats } from '../controllers/admin-getTourStats';
 import requiresAuthentication from '../middlewares/authenticationHandler';
 import requiresAuthorization from '../middlewares/authorizationHandler';
+
 const adminRouter = express.Router();
-import cors from 'cors';
 
 // Middleware to protect routes: If a user logs out in one tab, it clears the token cookie,
 // potentially causing errors in other tabs. Redirect to login page on further requests
 // to prevent errors and ensure a consistent user experience across multiple tabs.
 // Applies to all routes below this middleware.
 
-adminRouter.use([
-  cors({ credentials: true, origin: 'http://localhost:5173' }),
-  requiresAuthentication,
-  requiresAuthorization(['admin']),
-]);
+adminRouter.use([requiresAuthentication, requiresAuthorization(['admin'])]);
 
 adminRouter.route('/getStats').get(getTourStats);
 adminRouter.route('/getTours').get(getAllToursForAdmin);
