@@ -129,6 +129,9 @@ userSchema.pre('save', async function (next) {
   }
 });
 
+// create text index for searching users by userName or email
+userSchema.index({ userName: 'text', email: 'text' });
+
 const Users = mongoose.model<InferSchemaType<typeof userSchema>>(
   'Users',
   userSchema
