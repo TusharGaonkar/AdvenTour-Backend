@@ -2,7 +2,8 @@ import express from 'express';
 import passport from '../authentication/passport';
 import AdventourAppError from '../utils/adventourAppError';
 import { HydratedDocument } from 'mongoose';
-import loginUser from '../controllers/loginUserController';
+import { loginUser, logoutUser } from '../controllers/loginUserController';
+import loginAdmin from '../controllers/loginAdminController';
 import registerNewUser from '../controllers/registerNewUserController';
 import forgotPassword from '../controllers/forgotPasswordController';
 import resetPassword from '../controllers/resetPasswordController';
@@ -14,6 +15,7 @@ import {
 const authenticateRouter = express.Router();
 
 authenticateRouter.route('/login').post(loginUser);
+authenticateRouter.route('/admin/login').post(loginAdmin);
 
 authenticateRouter.route('/register').post(registerNewUser);
 
@@ -53,6 +55,8 @@ authenticateRouter.route('/google/failure').get((req, res, next) => {
 
 authenticateRouter.route('/forgotPassword').post(forgotPassword);
 authenticateRouter.route('/resetPassword').post(resetPassword);
+authenticateRouter.route('/logout').post(logoutUser);
+
 authenticateRouter.route('/verifyToken').get(verifyToken, successResponse);
 
 export default authenticateRouter;
