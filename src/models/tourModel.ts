@@ -242,7 +242,7 @@ export const tourSchema = new mongoose.Schema({
               type: String,
               required: [true, 'Activity name is required'],
               minlength: [
-                6,
+                3,
                 'Activity name should be at least 6 characters long',
               ],
               maxLength: [50, 'Activity name should not exceed 50 characters'],
