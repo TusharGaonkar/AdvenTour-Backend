@@ -1,5 +1,5 @@
 import mongoose, { HydratedDocument, InferSchemaType } from 'mongoose';
-import Tours from '../models/bookmarkToursModel';
+import Tour from './tourModel';
 import validation from 'validator';
 import AdventourAppError from '../utils/adventourAppError';
 
@@ -18,7 +18,6 @@ const tourReviewSchema = new mongoose.Schema({
 
   createdAt: {
     type: Date,
-    default: Date.now(),
     required: true,
   },
 
@@ -46,7 +45,7 @@ const tourReviewSchema = new mongoose.Schema({
     required: true,
     trim: true,
     minLength: [10, 'Description must be at least 15 characters'],
-    maxLength: [500, 'Description must be less than 300 characters'],
+    maxLength: [3000, 'Description must be less than 300 characters'],
   },
 
   travelGroup: {
@@ -60,12 +59,13 @@ const tourReviewSchema = new mongoose.Schema({
     default: 'Solo',
   },
 
-  images: {
+  reviewImages: {
     type: [String],
+    required: false,
     validation: {
       validate: function (value: string[]) {
         return (
-          value.length <= 10 &&
+          value.length <= 2 &&
           value.every((item: string) => validation.isURL(item))
         );
       },
@@ -76,23 +76,21 @@ const tourReviewSchema = new mongoose.Schema({
 // ensure that the review can only be created once by a given user prevent duplicates by using compound indexes!
 tourReviewSchema.index({ tour: 1, user: 1 }, { unique: true });
 
-const TourReviews = mongoose.model<InferSchemaType<typeof tourReviewSchema>>(
-  'TourReviews',
-  tourReviewSchema
-);
-
 // once a review is posted , update the tour average ratings and total ratings
-tourReviewSchema.post('save', async function (newReview) {
+tourReviewSchema.post('save', async function (newReview, next) {
   try {
     const { tour } = newReview;
 
+    // Calculate the total ratings and average ratings
     const tourRatingsStats = await TourReviews.aggregate([
       {
-        $match: { tour },
+        $match: {
+          tour: new mongoose.Types.ObjectId(tour),
+        },
       },
       {
         $group: {
-          _id: '$tour', // or could be null doesn't matter here
+          _id: null, // group all the documents together
           totalRatings: { $sum: 1 },
           ratingsAverage: { $avg: '$rating' },
         },
@@ -106,21 +104,44 @@ tourReviewSchema.post('save', async function (newReview) {
       },
     ]);
 
+    if (tourRatingsStats.length === 0) {
+      throw new AdventourAppError(
+        'No reviews found for this tour, can not update!',
+        500
+      );
+    }
+
     const { totalRatings, ratingsAverage } = tourRatingsStats[0];
-    await Tours.findByIdAndUpdate(
+
+    const updatedTour = await Tour.findByIdAndUpdate(
       tour,
       {
         totalRatings,
         ratingsAverage,
       },
-      { runValidators: true }
+      { runValidators: true, new: true }
     );
+
+    if (!updatedTour) {
+      throw new AdventourAppError(
+        'Something went wrong while updating tour average ratings!',
+        500
+      );
+    }
+
+    next();
   } catch (error) {
     throw new AdventourAppError(
-      'Something went wrong while updating tour average ratings!',
+      error.message ||
+        'Something went wrong while updating tour average ratings!',
       500
     );
   }
 });
+
+const TourReviews = mongoose.model<InferSchemaType<typeof tourReviewSchema>>(
+  'TourReviews',
+  tourReviewSchema
+);
 
 export default TourReviews;
