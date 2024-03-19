@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
       validate: validation.isAlpha,
       message: 'Name can only contain letters',
     },
-    maxLength: [, 'Name must be at least 50 characters'],
+    maxLength: [50, 'Name must be at least 50 characters'],
   },
 
   email: {
@@ -30,8 +30,9 @@ const userSchema = new mongoose.Schema({
   authProvider: {
     type: String,
     enum: {
-      values: ['adventour', 'google'],
-      message: 'AuthProvider must be one of the following: adventour, google',
+      values: ['adventour', 'google', 'github'],
+      message:
+        'Auth provider must be one of the following: AdvenTour, Google or Github',
     },
     required: true,
     default: 'adventour',
@@ -57,7 +58,6 @@ const userSchema = new mongoose.Schema({
 
   createdAt: {
     type: Date,
-    default: Date.now(),
     select: false,
   },
 
@@ -75,12 +75,11 @@ const userSchema = new mongoose.Schema({
     select: false,
   },
   passwordResetExpires: {
-    type: Date,
+    type: Number, // in unix timestamp
     select: false,
   },
   passwordLastUpdatedAt: {
     type: Date,
-    default: Date.now(),
     select: false,
   },
 });
