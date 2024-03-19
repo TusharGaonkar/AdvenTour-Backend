@@ -3,8 +3,11 @@ import { randomBytes, createHash } from 'crypto';
 import Users from '../models/userModel';
 import AdventourAppError from '../utils/adventourAppError';
 import apiClientErrorHandler from '../middlewares/apiClientErrorHandler';
+import sendEmail from '../services/mailService';
+import { render } from '@react-email/render';
+import AdventourResetPasswordEmail from '../emails/AdventourResetEmail';
 
-//generates a random 120 length random hex string!
+//  Generates a random 120 length random hex string!
 export const generatePasswordResetToken = () => {
   const tokenLength = 60; //token final length will be twice the length of this!
   // returns a buffer , convert that to hex;
@@ -13,7 +16,7 @@ export const generatePasswordResetToken = () => {
 };
 
 export const hashToken = (token: string) => {
-  //hash the token , convert it into hex
+  //  Hash the token , convert it into hex
   const tokenHash = createHash('sha256').update(token).digest('hex');
   return tokenHash;
 };
@@ -29,27 +32,39 @@ const forgotPassword = apiClientErrorHandler(
       );
     }
 
-    const isExistingUser = await Users.findOne({ email }).select('_id');
-    if (!isExistingUser)
-      throw new AdventourAppError(
-        'No registered user found with this email',
-        401
-      );
+    const isExistingUser = await Users.findOne({ email }).select(
+      '_id userName authProvider'
+    );
+
+    if (!isExistingUser || isExistingUser.authProvider !== 'adventour') {
+      if (!isExistingUser)
+        throw new AdventourAppError(
+          'No registered users found, please register',
+          404
+        );
+      else
+        throw new AdventourAppError(
+          'Please login using your' + isExistingUser.authProvider + ' account',
+          401
+        );
+    }
+
+    const firstName = isExistingUser.userName.split(' ')[0];
 
     let randomTokenString = generatePasswordResetToken();
 
-    // calculate the hash
+    // Calculate the hash of the token, storing this hash in the db instead of the original token for security
     let randomTokenHash = hashToken(randomTokenString);
 
-    //  we need to update the passwordResetToken field in the user field ok,
-    // but we will store the hash of it instead of the token for security
-    // we know this is random , still check if there are no other duplicate token in the users collections
+    // We need to update the passwordResetToken field in the user field ok,
+    // But we will store the hash of it instead of the token for security
+    // We know this is random , still check if there are no other duplicate token in the users collections
 
     let isDuplicateToken = await Users.find({
       passwordResetToken: randomTokenHash,
     });
 
-    // keep generating random token till its not unique , i am however unsetting the passwordResetToken once updated no need to do this though still as a security measure
+    // Keep generating random token till its not unique , in case of collision which is unlikely to happen, still as a security measure
     while (isDuplicateToken) {
       randomTokenString = generatePasswordResetToken();
       randomTokenHash = hashToken(randomTokenString);
@@ -58,10 +73,10 @@ const forgotPassword = apiClientErrorHandler(
       });
     }
 
-    // Date.now() gives milliseconds from epoch add 5 minutes to it
-    const passwordResetExpires = new Date(Date.now() + 5 * 60 * 1000);
+    // Date.now() gives milliseconds from epoch add 10 minutes to it
+    const passwordResetExpires = Date.now() + 10 * 60 * 1000;
 
-    await Users.updateOne(
+    const updatedResetTokenWithExpiry = await Users.updateOne(
       { email },
       {
         passwordResetToken: randomTokenHash,
@@ -69,10 +84,44 @@ const forgotPassword = apiClientErrorHandler(
       }
     );
 
-    // send the token to the user's registered email ,I will implement this later node mailer with custom smtp / mail-gun
-    // testing just send the token as res
+    if (!updatedResetTokenWithExpiry)
+      throw new AdventourAppError('Something went wrong', 500);
 
-    res.send(randomTokenString);
+    //Get the html and text version of the email
+    const baseURL = process.env.BASE_URL;
+    const resetPasswordLink = `${baseURL}/resetPassword?token=${randomTokenString}`;
+
+    const html = render(
+      AdventourResetPasswordEmail({
+        userFirstname: firstName,
+        resetPasswordLink,
+      }),
+      {
+        pretty: true,
+      }
+    );
+
+    const text = render(
+      AdventourResetPasswordEmail({
+        userFirstname: firstName,
+        resetPasswordLink,
+      }),
+      {
+        plainText: true,
+      }
+    );
+
+    await sendEmail({
+      to: email,
+      subject: 'Your AdvenTour reset password request',
+      text,
+      html,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Password reset link sent to your email',
+    });
   }
 );
 
