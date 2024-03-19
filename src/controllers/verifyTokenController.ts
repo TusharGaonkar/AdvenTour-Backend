@@ -16,7 +16,7 @@ export const successResponse = (
   req: Request & { user: any },
   res: Response
 ) => {
-  const { userName, email, role } = req.user;
+  const { userName, email, role, avatar } = req.user;
   res.status(200).json({
     status: 'success',
     data: {
@@ -24,6 +24,7 @@ export const successResponse = (
         userName,
         email,
         role,
+        avatar,
       },
     },
   });
