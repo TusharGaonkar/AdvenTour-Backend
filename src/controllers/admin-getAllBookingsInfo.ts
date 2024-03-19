@@ -13,7 +13,12 @@ export const getAllBookingsInfo = apiClientErrorHandler(
       selectedDate = '',
     } = req.query || {};
 
-    if (!status || (status != 'confirmed' && status != 'cancelled')) {
+    if (
+      !status ||
+      (status != 'confirmed' &&
+        status != 'cancelled' &&
+        status != 'userCancelled')
+    ) {
       throw new AdventourAppError('Invalid status', 400);
     } else if (!sortBy || (sortBy != 'latest' && sortBy != 'oldest')) {
       throw new AdventourAppError('Invalid sortBy', 400);
@@ -21,9 +26,23 @@ export const getAllBookingsInfo = apiClientErrorHandler(
       throw new AdventourAppError('Invalid page', 400);
     }
 
-    const filterCriteria: FilterQuery<any> = {
-      status,
-    };
+    let filterCriteria: FilterQuery<any> | null = null;
+
+    if (status === 'userCancelled') {
+      filterCriteria = {
+        status: 'cancelled',
+        isRefunded: false,
+      };
+    } else if (status === 'confirmed') {
+      filterCriteria = {
+        status: 'confirmed',
+      };
+    } else {
+      filterCriteria = {
+        status: 'cancelled',
+        isRefunded: true,
+      };
+    }
 
     if (selectedDate) {
       filterCriteria['tourStartDate'] = {
