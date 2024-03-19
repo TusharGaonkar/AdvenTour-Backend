@@ -17,9 +17,10 @@ export const cancelAndRefundBooking = apiClientErrorHandler(
         }
 
         const booking = await Bookings.findOneAndUpdate(
-          { _id: bookingID, status: 'confirmed' },
+          { _id: bookingID, status: 'confirmed', isRefunded: false },
           {
             status: 'cancelled',
+            isRefunded: true,
           }
         ).session(session);
 
@@ -48,8 +49,8 @@ export const cancelAndRefundBooking = apiClientErrorHandler(
       });
     } catch (error) {
       throw new AdventourAppError(
-        error.message || 'Internal server error',
-        error.statusCode ?? 500
+        error.message || error.error.description || 'Internal server error',
+        (error.statusCode || error.description) ?? 500
       );
     } finally {
       session.endSession();
