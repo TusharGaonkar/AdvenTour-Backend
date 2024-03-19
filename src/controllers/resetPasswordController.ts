@@ -27,15 +27,16 @@ const resetPassword = apiClientErrorHandler(
 
     const hashedResetToken = hashToken(resetToken as string);
     const hashedPassword = await hashDBPassword(password); // manually hash the password , findAndUpdate or updateOne doesn't trigger .pre("save") middleware as of now!
-    console.log('hashed password', hashedPassword);
+
     const isExistingUser = await Users.findOneAndUpdate(
       {
         passwordResetToken: hashedResetToken,
-        passwordResetExpires: { $gt: Date.now() }, // check if it's a valid token the timer hasn't expired!
+        passwordResetExpires: { $gte: Date.now() }, // check if it's a valid token the timer hasn't expired!
       },
       {
         $set: {
           password: hashedPassword,
+          passwordLastUpdatedAt: new Date(Date.now()),
         },
         $unset: {
           passwordResetToken: 1, // unset the token
@@ -49,10 +50,11 @@ const resetPassword = apiClientErrorHandler(
     );
 
     if (!isExistingUser)
-      throw new AdventourAppError('Invalid token or user', 401);
+      throw new AdventourAppError('Token has expired or invalid', 401);
 
     res.status(200).json({
       status: 'success',
+      message: 'Password reset successfully',
     });
   }
 );
