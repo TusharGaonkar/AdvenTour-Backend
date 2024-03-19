@@ -12,6 +12,7 @@ import requiresAuthentication from '../middlewares/authenticationHandler';
 import requiresAuthorization from '../middlewares/authorizationHandler';
 import searchSuggestionsController from '../controllers/searchSuggestionsController';
 import optionalAuthentication from '../utils/optionalAuthentication';
+import getSimilarTours from '../controllers/getSimilarTours';
 
 const tourRouter = express.Router();
 
@@ -29,8 +30,9 @@ tourRouter
 tourRouter.route('/suggestions').get(searchSuggestionsController);
 
 tourRouter.route('/getTourCost').get(getTourCost);
+tourRouter.route('/getSimilarTours').get(getSimilarTours);
 
-//Place this below , else :tourID will be called for any route after tours/
+//  *Place this below , else :tourID will be called for any route after tours/
 tourRouter
   .route('/:tourID')
   .get(getTourWithId)
