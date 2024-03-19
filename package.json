@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon",
+    "email": "email dev --dir src/emails --port 3000",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -16,6 +17,7 @@
     "@types/cors": "^2.8.17",
     "@types/formidable": "^3.4.5",
     "@types/multer": "^1.4.11",
+    "@types/nodemailer": "^6.4.14",
     "@types/passport-google-oauth20": "^2.0.14",
     "eslint": "^8.52.0",
     "eslint-config-airbnb-base": "^15.0.0",
@@ -29,6 +31,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "@react-email/components": "0.0.15",
     "@types/express": "^4.17.20",
     "@types/lodash": "^4.14.200",
     "@types/morgan": "^1.9.7",
@@ -51,6 +54,8 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "razorpay": "^2.9.2",
+    "react-email": "2.1.0",
+    "resend": "^3.2.0",
     "validator": "^13.11.0"
   }
 }
