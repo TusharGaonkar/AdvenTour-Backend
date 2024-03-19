@@ -61,7 +61,10 @@ export const getAllTours = apiClientErrorHandler(
 export const getTourWithId = apiClientErrorHandler(
   async (req: Request, res: Response) => {
     const { tourID } = req.params;
-    const tour = await Tour.findById(tourID);
+    const tour = await Tour.findById(tourID).populate({
+      path: 'createdBy',
+      select: 'userName avatar -_id',
+    });
     res.status(200).json({
       status: 'success',
       totalResults: tour ? 1 : 0,
