@@ -7,7 +7,10 @@ cloudinary.config({
 });
 
 // upload tour images to cloudinary returns a promise with cloudinary response
-const uploadTourImageToCloudinary = async (filePathOnDisk: string) => {
+const uploadImageToCloudinary = async (
+  filePathOnDisk: string,
+  cloudFolder?: string
+) => {
   return new Promise((resolve, reject) => {
     const options = {
       use_filename: true,
@@ -17,7 +20,7 @@ const uploadTourImageToCloudinary = async (filePathOnDisk: string) => {
         { fetch_format: 'auto' },
       ],
 
-      folder: `adventour-tour-images`,
+      folder: cloudFolder ?? `adventour-tour-images`,
     };
 
     cloudinary.uploader.upload(filePathOnDisk, options, (err, result) => {
@@ -30,4 +33,4 @@ const uploadTourImageToCloudinary = async (filePathOnDisk: string) => {
   });
 };
 
-export default uploadTourImageToCloudinary;
+export default uploadImageToCloudinary;
