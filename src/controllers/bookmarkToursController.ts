@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import apiClientErrorHandler from '../middlewares/apiClientErrorHandler';
 import AdventourAppError from '../utils/adventourAppError';
 import BookMarkedTours from '../models/bookmarkToursModel';
+import { PipelineStage } from 'mongoose';
 
 export const getUserBookmarks = apiClientErrorHandler(
   async (req: Request & { user: any }, res: Response) => {
@@ -10,19 +11,92 @@ export const getUserBookmarks = apiClientErrorHandler(
         throw new AdventourAppError('User not found', 404);
       }
 
-      const getAllBookmarks = await BookMarkedTours.find({
-        user: req.user._id,
-        tour: { $exists: true, $ne: null },
-      }).populate({
-        path: 'tour',
-        select: '_id title mainCoverImage',
-      });
+      const { search = '', page = 1, limit = 6 } = req.query || {};
 
-      return res.status(200).json({
+      const getBookmarksPipeline: PipelineStage[] = [
+        {
+          $match: {
+            user: req.user._id,
+            tour: {
+              $exists: true,
+              $ne: null,
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'tours',
+            localField: 'tour',
+            foreignField: '_id',
+            as: 'tour',
+          },
+        },
+        {
+          $unwind: {
+            path: '$tour',
+          },
+        },
+      ];
+
+      if (search) {
+        getBookmarksPipeline.push({
+          $match: {
+            'tour.title': {
+              $regex: new RegExp((search as string).trim(), 'i'),
+            },
+          },
+        });
+      }
+
+      let totalBookmarksPipeline: PipelineStage[] = [
+        ...getBookmarksPipeline,
+        {
+          $count: 'totalBookmarks',
+        },
+      ];
+
+      const paginationPipeline: PipelineStage[] = [
+        {
+          $skip: (Number(page) - 1) * Number(limit),
+        },
+        {
+          $limit: Number(limit),
+        },
+        {
+          $sort: { createdAt: -1 },
+        },
+        {
+          $project: {
+            'tour._id': 1,
+            'tour.title': 1,
+            'tour.mainCoverImage': 1,
+            createdAt: 1,
+          },
+        },
+      ];
+
+      const bookmarksData = await BookMarkedTours.aggregate([
+        {
+          $facet: {
+            bookmarks: [...getBookmarksPipeline, ...paginationPipeline] as any,
+            totalBookmarks: totalBookmarksPipeline as any,
+          },
+        },
+      ]);
+
+      const { totalBookmarks = 0 } =
+        bookmarksData?.[0]?.totalBookmarks?.[0] ?? {};
+      const bookmarks = bookmarksData?.[0]?.bookmarks ?? [];
+      const totalPages = Math.ceil(totalBookmarks / Number(limit));
+
+      res.status(200).json({
         status: 'success',
-        totalResults: !getAllBookmarks ? 0 : getAllBookmarks.length,
         data: {
-          bookmarks: getAllBookmarks,
+          bookmarks,
+        },
+        pagination: {
+          totalPages,
+          currentPage: Number(page),
         },
       });
     } catch (error) {
