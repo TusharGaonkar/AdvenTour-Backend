@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import apiClientErrorHandler from '../middlewares/apiClientErrorHandler';
-import { uploadTourImagesAdventourServer } from '../utils/adventourFileUpload';
+import { uploadTourImagesAdventourServer } from '../utils/adventourTourImagesUpload';
 import AdventourAppError from '../utils/adventourAppError';
 import uploadTourImageToCloudinary from '../services/cloudinaryImageUpload';
 import ToursValidation from '../models/toursValidationModel';
@@ -37,7 +37,7 @@ const saveTourImagesToCloudinary = async (tourData: Record<string, any>) => {
     for (const day of tourDataClone.itinerary) {
       for (const activity of day.activities) {
         if (activity.image) {
-          activity.image = await uploadTourImageToCloudinary(activity.image);
+          activity.image = await uploadTourImageToCloudinary(activity.image); // returns public_id and not the url
         } else {
           throw new AdventourAppError('Activity image not found', 404);
         }
@@ -59,7 +59,6 @@ export const addTourToValidation = apiClientErrorHandler(
     next: NextFunction
   ) => {
     try {
-      console.log('Called');
       if (!req.user) {
         throw new AdventourAppError('User not found', 404);
       }
