@@ -1,7 +1,7 @@
 import mongoose, { InferSchemaType } from 'mongoose';
 import validation from 'validator';
 
-const STATUS = ['pending', 'confirmed', 'failed'];
+const STATUS = ['pending', 'confirmed', 'cancelled', 'failed'];
 
 const bookingSchema = new mongoose.Schema({
   tour: {
@@ -53,6 +53,15 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+
+  isRefunded: {
+    type: Boolean,
+    default: false,
+    required: function () {
+      return this.status === 'cancelled';
+    },
+  },
+
   totalCost: {
     type: Number,
     required: true,
