@@ -56,6 +56,14 @@ const userSchema = new mongoose.Schema({
     },
   },
 
+  googleID: {
+    type: String,
+    select: false,
+    required: function () {
+      return this.authProvider === 'google';
+    },
+  },
+
   createdAt: {
     type: Date,
     select: false,
