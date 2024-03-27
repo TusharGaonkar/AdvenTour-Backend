@@ -44,7 +44,7 @@ const forgotPassword = apiClientErrorHandler(
         );
       else
         throw new AdventourAppError(
-          'Please login using your' + isExistingUser.authProvider + ' account',
+          'Please login using your ' + isExistingUser.authProvider + ' account',
           401
         );
     }
