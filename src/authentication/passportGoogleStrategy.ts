@@ -15,14 +15,35 @@ const googleStrategy = new Strategy(options, async function (
   profile,
   callback
 ) {
+  const googleID = profile.id;
+
   const { name: userName, email, picture: avatar } = profile._json;
 
   try {
-    const existingUser = await Users.findOne({ email, authProvider: 'google' });
+    // Check if the user has already used the email provided for other sing-in methods in AdvenTour
+    const isRegisteredEmail = await Users.findOne({
+      email,
+      authProvider: { $ne: 'google' },
+    });
+
+    if (isRegisteredEmail) {
+      // If the email is already registered with a different auth provider, return an error
+      return callback(
+        new Error(
+          'This email is already registered. Please use a different email address.'
+        )
+      );
+    }
+
+    const existingUser = await Users.findOne({
+      googleID,
+      authProvider: 'google',
+    });
 
     if (existingUser) return callback(null, existingUser);
 
     const newUser = await Users.create({
+      googleID,
       userName,
       email,
       avatar,
