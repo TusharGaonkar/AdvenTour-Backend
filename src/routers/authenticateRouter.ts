@@ -26,31 +26,41 @@ authenticateRouter.route('/google').get(
   })
 );
 
+// On google login success
 authenticateRouter.route('/google/callback').get(
-  passport.authenticate('google', {
-    failureRedirect: '/auth/google/failure',
-    session: false,
-  }),
+  (req, res, next) => {
+    passport.authenticate(
+      'google',
+      {
+        failureRedirect: '/auth/google/failure',
+        session: false,
+      },
+      (error, user) => {
+        if (error || !user) {
+          return res.redirect(`${process.env.BASE_URL}/login`);
+        }
+        req.user = user;
+        next();
+      }
+    )(req, res, next);
+  },
   (req, res) => {
     const user: HydratedDocument<any> = req.user;
     const token = user.generateJwtToken();
 
     res.cookie(process.env.JWT_TOKEN_KEY, token, {
       httpOnly: true,
-      secure: true, // can't be read in the client side javascript ; prevent cross-site scripting and token stealing!
+      sameSite: 'none',
+      secure: true,
+      expires: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
     });
-    res.status(200).json({
-      status: 'success',
-      data: {
-        user,
-        token,
-      },
-    });
+
+    res.redirect(process.env.BASE_URL);
   }
 );
 
 authenticateRouter.route('/google/failure').get((req, res, next) => {
-  next(new AdventourAppError('Google Authentication Failed', 401));
+  res.redirect(`${process.env.BASE_URL}/login`);
 });
 
 authenticateRouter.route('/forgotPassword').post(forgotPassword);
