@@ -68,8 +68,23 @@ export default class AdvenTourQueryBuilder {
       }
     );
     console.log(this.modifiedReqQueryObj.query);
+
+    const query = this.modifiedReqQueryObj.query;
+
+    if (
+      query &&
+      query.tourDurationInDays &&
+      query.tourDurationInDays['$in']?.includes(4)
+    ) {
+      query['$or'] = [
+        { tourDurationInDays: { $in: [...query.tourDurationInDays['$in']] } },
+        { tourDurationInDays: { $gte: 4 } },
+      ];
+      delete query.tourDurationInDays;
+    }
+
     this.pipeline.push({
-      $match: this.modifiedReqQueryObj.query,
+      $match: query,
     });
 
     return this;
@@ -175,7 +190,7 @@ export default class AdvenTourQueryBuilder {
   public getNearbyTours(geoField: string) {
     if (this.reqQueryObj.query.getNearbyTours) {
       const { latitude, longitude } = this.reqQueryObj.query.getNearbyTours;
-      console.log(latitude + ' ' + longitude);
+      console.log('latitude and longitude', latitude, longitude);
       if (latitude && longitude) {
         // @ts-ignore
         this.pipeline.push({
