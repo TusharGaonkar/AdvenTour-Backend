@@ -52,7 +52,7 @@ const searchSuggestionsController = apiClientErrorHandler(
         },
 
         {
-          $limit: 6,
+          $limit: 10,
         },
         {
           $project: {
