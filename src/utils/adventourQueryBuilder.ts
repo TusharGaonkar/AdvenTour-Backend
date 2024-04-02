@@ -41,8 +41,6 @@ export default class AdvenTourQueryBuilder {
       reqQueryString,
       function (key, value) {
         if (key === '$in') {
-          console.log(value);
-
           if (value.length > 0) {
             const parsedArray = value.split(',');
             return parsedArray.map((item: string) => {
@@ -63,11 +61,10 @@ export default class AdvenTourQueryBuilder {
         ) {
           return parseInt(value, 10);
         }
-        console.log('filterstage', this.pipeline);
+
         return value;
       }
     );
-    console.log(this.modifiedReqQueryObj.query);
 
     const query = this.modifiedReqQueryObj.query;
 
@@ -144,8 +141,6 @@ export default class AdvenTourQueryBuilder {
           },
         },
       });
-
-      console.log('searchstage', this.pipeline);
     }
     return this;
   }
@@ -188,9 +183,12 @@ export default class AdvenTourQueryBuilder {
   }
 
   public getNearbyTours(geoField: string) {
-    if (this.reqQueryObj.query.getNearbyTours) {
+    // as of now both $geoNear and $search can't be in the same pipeline as they need to be the first stage in the pipeline
+    if (
+      this.reqQueryObj.query.getNearbyTours &&
+      !this.reqQueryObj.query.search
+    ) {
       const { latitude, longitude } = this.reqQueryObj.query.getNearbyTours;
-      console.log('latitude and longitude', latitude, longitude);
       if (latitude && longitude) {
         // @ts-ignore
         this.pipeline.push({
@@ -209,7 +207,7 @@ export default class AdvenTourQueryBuilder {
     return this;
   }
   public getQuery() {
-    console.log(this.pipeline);
+    console.log('pipeline', this.pipeline);
     return this.model.aggregate(this.pipeline);
   }
 }
