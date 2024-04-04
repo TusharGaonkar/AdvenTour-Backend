@@ -3,10 +3,9 @@ import passport from 'passport';
 import Users from '../models/userModel';
 
 const options: StrategyOptions = {
-  clientID:
-    '705828693897-o5tpmrf0prle2qqk9mmea4h0c9fm3jvh.apps.googleusercontent.com',
-  clientSecret: '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',
-  callbackURL: 'http://localhost:2000/api/v-1.0/auth/google/callback',
+  clientID: process.env.GOOGLE_AUTH_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_AUTH_CLIENT_SECRET,
+  callbackURL: process.env.GOOGLE_AUTH_CALLBACK_URL,
 };
 
 const googleStrategy = new Strategy(options, async function (
