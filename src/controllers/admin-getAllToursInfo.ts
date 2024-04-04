@@ -5,13 +5,11 @@ import ToursValidation from '../models/toursValidationModel';
 
 export const getTourWithID = apiClientErrorHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.params.id);
     const tour = await ToursValidation.findById(req.params.id);
     if (!tour) {
       throw new AdventourAppError('Tour not found', 404);
     }
 
-    console.log(tour);
     res.status(200).json({
       status: 'success',
       totalResults: 1,

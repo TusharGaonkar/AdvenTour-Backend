@@ -207,7 +207,6 @@ export default class AdvenTourQueryBuilder {
     return this;
   }
   public getQuery() {
-    console.log('pipeline', this.pipeline);
     return this.model.aggregate(this.pipeline);
   }
 }

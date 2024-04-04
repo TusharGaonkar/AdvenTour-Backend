@@ -115,7 +115,6 @@ export const createBookmark = apiClientErrorHandler(
         throw new AdventourAppError('User not found', 404);
       }
 
-      console.log(req.body.tourId, req.user._id);
       await BookMarkedTours.create({
         tour: req.body.tourId,
         user: req.user._id,

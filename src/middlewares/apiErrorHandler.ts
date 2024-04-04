@@ -4,14 +4,16 @@ import AdentourAppError from '../utils/adventourAppError';
 const handleProductionErrors = (error: AdentourAppError, res: Response) => {
   // send only the client side errors as a response
   if (error.isClientError)
-    res.status(error.statusCode).json({
+    return res.status(error.statusCode).json({
       status: error.status,
       message: error.message,
     });
   else
-    console.log(
-      "Something went wrong in the AdvenTour Server it's not an error from your end , please contact gaonkar.tushar01@gmail.com!"
-    );
+    return res.status(error.statusCode).json({
+      status: 'fail',
+      message:
+        "Something went wrong in the AdvenTour Server it's not an error from your end , please contact gaonkar.tushar01@gmail.com if it persists!",
+    });
 };
 
 const handleDevelopmentErrors = (error: AdentourAppError, res: Response) => {
