@@ -1,4 +1,4 @@
-# Docker file configuration for AdvenTour backend in developer mode
+# Docker file configuration for AdvenTour backend in development mode
 
 # Using node:20.12.0-alpine as the base image in
 FROM node:20.12.0-alpine AS development
@@ -30,7 +30,7 @@ WORKDIR /app
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json .
 
-# Install dependencies
+# Skip installing dev dependencies
 RUN npm install
 
 # Copy the rest of the application files to the working directory
