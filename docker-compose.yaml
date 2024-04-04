@@ -2,14 +2,17 @@ version: '3.8'
 
 services:
   adventour-backend:
-    container_name: adventour_backend_v1.0-dev
+    container_name: adventour-backend
     build:
       context: .
       dockerfile: Dockerfile
-      target: production
+      target: development
     env_file:
       - config.env
     ports:
       - '${PORT:-2000}:${PORT:-2000}'
     volumes:
-      - .:/app # bind the current directory to /app in the container so that file changes in dev mode are reflected in the container
+      - /app/node_modules # prevent node_modules to be overwritten create anonymous volume
+      - .:/app
+
+    # bind the current directory to /app in the container so that file changes in dev mode are reflected in the container

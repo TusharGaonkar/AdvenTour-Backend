@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   adventour-backend:
-    container_name: 'adventour_backend_v1.0-prod'
+    container_name: adventour_backend
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,3 +11,5 @@ services:
       - ./config.env
     ports:
       - '${PORT:-2000}:${PORT:-2000}'
+    volumes:
+      - /app/node_modules # prevent node_modules to be overwritten using anonymous volume
