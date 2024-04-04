@@ -1,10 +1,9 @@
-/node_modules/
-/dist/
-/public/
-.vscode/
+node_modules
+dist
+public
+.vscode
 *.log
 .DS_Store
 .git
 *Dockerfile*
 *docker-compose*
-
