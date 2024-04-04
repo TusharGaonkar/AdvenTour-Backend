@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  adventour-backend:
+    container_name: 'adventour_backend_v1.0-prod'
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    env_file:
+      - ./config.env
+    ports:
+      - '${PORT:-2000}:${PORT:-2000}'
