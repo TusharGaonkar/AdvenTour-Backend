@@ -3,6 +3,7 @@
     "jsx": "react",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "target": "ES2020",
     "baseUrl": "src",
     "outDir": "dist",
     "sourceMap": true,
