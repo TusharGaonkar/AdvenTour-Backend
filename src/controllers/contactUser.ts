@@ -5,26 +5,17 @@ import sendEmail from '../services/mailService';
 import { render } from '@react-email/render';
 import ContactUserEmail from '../emails/ContactUserEmail';
 import { SendEmailProps } from '../services/mailService';
+import userEmailQueue from '../message-queues/queues/userEmailQueue';
+import { Job } from 'bullmq';
 
-const contactUser = apiClientErrorHandler(
-  async (req: Request & { user: any }, res: Response) => {
-    const user = req.user;
+export const contactUser = async (job: Job) => {
+  try {
+    const { to, subject, message, user } = job.data;
 
-    if (!user) throw new AdventourAppError('User not found', 401);
-
-    const {
-      to = '',
-      subject = '',
-      message = '',
-    }: { to: string; subject: string; message: string } = req.body || {};
-    if (!to || !subject || !message)
-      throw new AdventourAppError(
-        'Please provide "to", "subject" and "message" fields',
-        400
-      );
     const text = render(ContactUserEmail({ subject, message }), {
       plainText: true,
     });
+
     const html = render(ContactUserEmail({ subject, message }), {
       pretty: true,
     });
@@ -45,12 +36,48 @@ const contactUser = apiClientErrorHandler(
     };
 
     await sendEmail(sendEmailConfig);
+  } catch (error) {
+    // this failed job will be retried ok by the worker
+    throw error;
+  }
+};
+
+export const addContactUserJob = apiClientErrorHandler(
+  async (req: Request & { user: any }, res: Response) => {
+    const user = req.user;
+
+    if (!user) throw new AdventourAppError('User not found', 401);
+
+    const {
+      to = '',
+      subject = '',
+      message = '',
+    }: { to: string; subject: string; message: string } = req.body || {};
+
+    if (!to || !subject || !message)
+      throw new AdventourAppError(
+        'Please provide "to", "subject" and "message" fields',
+        400
+      );
+
+    // add the job to the queue, in case of failure retry this job for 3 times
+    await userEmailQueue.add(
+      'contact-user',
+      {
+        to,
+        subject,
+        message,
+        user,
+      },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 4000 },
+      }
+    );
 
     res.status(200).json({
       status: 'success',
-      message: 'Email sent successfully',
+      message: 'Email enqueued successfully',
     });
   }
 );
-
-export default contactUser;
