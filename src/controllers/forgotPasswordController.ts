@@ -6,6 +6,8 @@ import apiClientErrorHandler from '../middlewares/apiClientErrorHandler';
 import sendEmail from '../services/mailService';
 import { render } from '@react-email/render';
 import AdventourResetPasswordEmail from '../emails/AdventourResetEmail';
+import { Job } from 'bullmq';
+import userResetPasswordQueue from '../message-queues/queues/userResetPasswordQueue';
 
 //  Generates a random 120 length random hex string!
 export const generatePasswordResetToken = () => {
@@ -15,13 +17,66 @@ export const generatePasswordResetToken = () => {
   return token;
 };
 
+//  Hash the token , convert it into hex
 export const hashToken = (token: string) => {
-  //  Hash the token , convert it into hex
   const tokenHash = createHash('sha256').update(token).digest('hex');
   return tokenHash;
 };
 
-const forgotPassword = apiClientErrorHandler(
+export const forgotPassword = async (job: Job) => {
+  try {
+    const { randomTokenString, randomTokenHash, firstName, email } = job.data;
+    // Password expiration should start 10mins from the time dequeued from the queue, so adding this logic here
+    // Date.now() gives milliseconds from epoch add 10 minutes to it
+    const passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+    const updatedResetTokenWithExpiry = await Users.updateOne(
+      { email },
+      {
+        passwordResetToken: randomTokenHash,
+        passwordResetExpires,
+      }
+    );
+
+    if (!updatedResetTokenWithExpiry)
+      throw new AdventourAppError('Something went wrong', 500);
+
+    const baseURL = process.env.BASE_URL;
+    const resetPasswordLink = `${baseURL}/resetPassword?token=${randomTokenString}`;
+
+    const html = render(
+      AdventourResetPasswordEmail({
+        userFirstname: firstName,
+        resetPasswordLink,
+      }),
+      {
+        pretty: true,
+      }
+    );
+
+    const text = render(
+      AdventourResetPasswordEmail({
+        userFirstname: firstName,
+        resetPasswordLink,
+      }),
+      {
+        plainText: true,
+      }
+    );
+
+    await sendEmail({
+      to: email,
+      subject: 'Your AdvenTour reset password request',
+      text,
+      html,
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Enqueues the job to the userForgotPasswordQueue
+export const addForgotPasswordJob = apiClientErrorHandler(
   async (req: Request, res: Response) => {
     const { email } = req.body;
 
@@ -56,8 +111,8 @@ const forgotPassword = apiClientErrorHandler(
     // Calculate the hash of the token, storing this hash in the db instead of the original token for security
     let randomTokenHash = hashToken(randomTokenString);
 
-    // We need to update the passwordResetToken field in the user field ok,
-    // But we will store the hash of it instead of the token for security
+    // We need to update the passwordResetToken field in the user field in the db,
+    // Store the hash of it instead of the token for security
     // We know this is random , still check if there are no other duplicate token in the users collections
 
     let isDuplicateToken = await Users.find({
@@ -73,56 +128,27 @@ const forgotPassword = apiClientErrorHandler(
       });
     }
 
-    // Date.now() gives milliseconds from epoch add 10 minutes to it
-    const passwordResetExpires = Date.now() + 10 * 60 * 1000;
-
-    const updatedResetTokenWithExpiry = await Users.updateOne(
-      { email },
+    // Add 3 retries on failure while sending password reset email
+    await userResetPasswordQueue.add(
+      'forgot-password',
       {
-        passwordResetToken: randomTokenHash,
-        passwordResetExpires,
+        randomTokenString,
+        randomTokenHash,
+        firstName,
+        email,
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 4000,
+        },
       }
     );
-
-    if (!updatedResetTokenWithExpiry)
-      throw new AdventourAppError('Something went wrong', 500);
-
-    //Get the html and text version of the email
-    const baseURL = process.env.BASE_URL;
-    const resetPasswordLink = `${baseURL}/resetPassword?token=${randomTokenString}`;
-
-    const html = render(
-      AdventourResetPasswordEmail({
-        userFirstname: firstName,
-        resetPasswordLink,
-      }),
-      {
-        pretty: true,
-      }
-    );
-
-    const text = render(
-      AdventourResetPasswordEmail({
-        userFirstname: firstName,
-        resetPasswordLink,
-      }),
-      {
-        plainText: true,
-      }
-    );
-
-    await sendEmail({
-      to: email,
-      subject: 'Your AdvenTour reset password request',
-      text,
-      html,
-    });
 
     res.status(200).json({
       status: 'success',
-      message: 'Password reset link sent to your email',
+      message: 'Password reset email enqueued',
     });
   }
 );
-
-export default forgotPassword;
