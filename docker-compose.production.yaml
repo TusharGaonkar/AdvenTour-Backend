@@ -1,7 +1,15 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis:7.2.4-alpine
+    container_name: reddis
+    ports:
+      - 6379:6379
+
   adventour-backend:
+    depends_on:
+      - redis
     container_name: adventour_backend
     build:
       context: .
