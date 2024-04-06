@@ -1,5 +1,5 @@
 import express from 'express';
-import contactUser from '../controllers/contactUser';
+import { addContactUserJob } from '../controllers/contactUser';
 import requiresAuthentication from '../middlewares/authenticationHandler';
 import requiresAuthorization from '../middlewares/authorizationHandler';
 
@@ -10,7 +10,7 @@ emailRouter
   .post(
     requiresAuthentication,
     requiresAuthorization(['admin', 'local-guide']),
-    contactUser
+    addContactUserJob
   );
 
 export default emailRouter;

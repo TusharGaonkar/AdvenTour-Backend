@@ -5,7 +5,7 @@ import { HydratedDocument } from 'mongoose';
 import { loginUser, logoutUser } from '../controllers/loginUserController';
 import loginAdmin from '../controllers/loginAdminController';
 import registerNewUser from '../controllers/registerNewUserController';
-import forgotPassword from '../controllers/forgotPasswordController';
+import { addForgotPasswordJob } from '../controllers/forgotPasswordController';
 import resetPassword from '../controllers/resetPasswordController';
 import {
   successResponse,
@@ -63,7 +63,7 @@ authenticateRouter.route('/google/failure').get((req, res, next) => {
   res.redirect(`${process.env.BASE_URL}/login`);
 });
 
-authenticateRouter.route('/forgotPassword').post(forgotPassword);
+authenticateRouter.route('/forgotPassword').post(addForgotPasswordJob);
 authenticateRouter.route('/resetPassword').post(resetPassword);
 authenticateRouter.route('/logout').post(logoutUser);
 

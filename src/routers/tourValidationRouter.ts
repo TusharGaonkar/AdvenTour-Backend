@@ -1,7 +1,7 @@
 import express from 'express';
 import requiresAuthentication from '../middlewares/authenticationHandler';
 import requiresAuthorization from '../middlewares/authorizationHandler';
-import { addTourToValidation } from '../controllers/tourValidationController';
+import { processNewToursJob } from '../controllers/tourValidationController';
 
 const tourValidationRouter = express.Router();
 
@@ -10,7 +10,7 @@ tourValidationRouter
   .post(
     requiresAuthentication,
     requiresAuthorization(['admin', 'user']),
-    addTourToValidation
+    processNewToursJob
   );
 
 export default tourValidationRouter;
