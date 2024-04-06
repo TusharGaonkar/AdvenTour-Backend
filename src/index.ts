@@ -21,8 +21,16 @@ import bookingsRouter from './routers/bookingsRouter';
 import emailRouter from './routers/emailRouter';
 import AdventourAppError from './utils/adventourAppError';
 import apiErrorHandler from './middlewares/apiErrorHandler';
+import startContactUserWorker from './message-queues/workers/contactUserWorker';
+import startForgotPasswordWorker from './message-queues/workers/forgotPasswordWorker';
+import startAddTourValidationWorker from './message-queues/workers/addTourValidationWorker';
 
 const app = express();
+
+// initialize message queues workers/consumers
+startContactUserWorker();
+startForgotPasswordWorker();
+startAddTourValidationWorker();
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
@@ -36,6 +44,7 @@ app.use(
     origin: process.env.ORIGIN.split(','),
   })
 );
+
 app.use(cookieParser()); // need to parse cookies in req.cookies
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
