@@ -17,7 +17,8 @@ const extractTokenFromCookie = (req: Request) => {
   return token;
 };
 
-// first try to extract the cookie from the auth header "Bearer" else just check a cookie for the token
+// First try to extract the token from the auth header "Bearer"
+// On failure , try to extract the JWT token with the tokenKey from the user request cookie
 const options: StrategyOptions = {
   jwtFromRequest: ExtractJwt.fromExtractors([
     ExtractJwt.fromAuthHeaderAsBearerToken(),
