@@ -5,6 +5,10 @@ dotenv.config({
   path: path.join(__dirname, '..', 'config.env'),
 });
 
+import fs from 'fs';
+import helmet from 'helmet';
+import mongoSanitize from 'express-mongo-sanitize';
+import { rateLimit } from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
@@ -27,15 +31,36 @@ import startAddTourValidationWorker from './message-queues/workers/addTourValida
 
 const app = express();
 
-// initialize message queues workers/consumers
+// Initialize message queues workers/consumers
 startContactUserWorker();
 startForgotPasswordWorker();
 startAddTourValidationWorker();
 
+// Adding security headers & mongo sanitization
+app.use(helmet());
+app.use(helmet.xssFilter());
+app.use(mongoSanitize());
+
+// Adding rate limiting to prevent DDOS attacks
+const rateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 400, // max 400 requests from same IP per minute
+  message:
+    'IP address has been blocked due to too many requests, please try again later!',
+});
+
+app.use(rateLimiter);
+
+// Setup logger for development & production
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, 'adventour-access.log'),
+  { flags: 'a' }
+);
+
 if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
+  app.use(morgan('dev', { stream: accessLogStream }));
 } else {
-  app.use(morgan('combined'));
+  app.use(morgan('combined', { stream: accessLogStream }));
 }
 
 app.use(
