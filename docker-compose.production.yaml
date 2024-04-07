@@ -44,18 +44,18 @@ services:
     networks:
       - app-network
 
-  # certbot:
-  #   image: certbot/certbot
-  #   container_name: certbot
-  #   volumes:
-  #     - certbot-etc:/etc/letsencrypt
-  #     - certbot-var:/var/lib/letsencrypt
-  #     - web-root:/var/www/html
-  #   depends_on:
-  #     - adventour-nginx-proxy
-  #   networks:
-  #     - app-network
-  #   command: certonly --webroot --webroot-path=/var/www/html --email gaonkar.tushar01@gmail.com --agree-tos --no-eff-email -d adventour.live -d www.adventour.live
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - web-root:/var/www/html
+    depends_on:
+      - adventour-nginx-proxy
+    networks:
+      - app-network
+    command: certonly --webroot --webroot-path=/var/www/html --email gaonkar.tushar01@gmail.com --agree-tos --no-eff-email -d adventour.live -d www.adventour.live
 
 volumes:
   certbot-etc:
