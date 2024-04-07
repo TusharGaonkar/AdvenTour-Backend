@@ -26,7 +26,7 @@ services:
     ports:
       - '${PORT:-2000}:${PORT:-2000}'
     volumes:
-      - ./:/app # Bind mount the entire project directory
+      - /app/node_modules # prevent node_modules to be overwritten create anonymous volume
 
   adventour-nginx-proxy:
     image: nginx:mainline-alpine
