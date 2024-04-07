@@ -13,7 +13,7 @@ services:
   adventour-backend:
     depends_on:
       - redis
-    container_name: adventour_backend
+    container_name: adventour-backend
     build:
       context: .
       dockerfile: Dockerfile
