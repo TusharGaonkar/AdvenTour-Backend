@@ -32,42 +32,6 @@ services:
       - .:/app
     # bind the current directory to /app in the container so that file changes in dev mode are reflected in the container
 
-  adventour-nginx-proxy:
-    image: nginx:mainline-alpine
-    container_name: adventour-nginx-proxy
-    restart: unless-stopped
-    ports:
-      - '80:80'
-    volumes:
-      - web-root:/var/www/html
-      - ./nginx-conf:/etc/nginx/conf.d
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-    depends_on:
-      - adventour-backend
-    networks:
-      - app-network
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - web-root:/var/www/html
-    depends_on:
-      - adventour-nginx-proxy
-    networks:
-      - app-network
-    command: certonly --webroot --webroot-path=/var/www/html \
-      --email gaonkar.tushar01@gmail.com --agree-tos --no-eff-email --staging -d adventour.live \
-      -d www.adventour.live
-
-volumes:
-  certbot-etc:
-  certbot-var:
-  web-root:
-
 networks:
   app-network:
     driver: bridge
