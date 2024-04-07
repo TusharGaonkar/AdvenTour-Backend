@@ -1,3 +1,5 @@
+# Referenced proxy setup with ssl certificates from
+# https://www.digitalocean.com/community/tutorials/how-to-secure-a-containerized-node-js-application-with-nginx-let-s-encrypt-and-docker-compose
 version: '3.8'
 
 services:
@@ -5,7 +7,10 @@ services:
     image: redis:7.2.4-alpine
     container_name: redis
     ports:
-      - 6379:6379
+      - '6379:6379'
+    restart: unless-stopped
+    networks:
+      - app-network
 
   adventour-backend:
     depends_on:
@@ -17,10 +22,52 @@ services:
       target: development
     env_file:
       - config.env
+    restart: unless-stopped
+    networks:
+      - app-network
     ports:
       - '${PORT:-2000}:${PORT:-2000}'
     volumes:
       - /app/node_modules # prevent node_modules to be overwritten create anonymous volume
       - .:/app
-
     # bind the current directory to /app in the container so that file changes in dev mode are reflected in the container
+
+  adventour-nginx-proxy:
+    image: nginx:mainline-alpine
+    container_name: adventour-nginx-proxy
+    restart: unless-stopped
+    ports:
+      - '80:80'
+    volumes:
+      - web-root:/var/www/html
+      - ./nginx-conf:/etc/nginx/conf.d
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+    depends_on:
+      - adventour-backend
+    networks:
+      - app-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - web-root:/var/www/html
+    depends_on:
+      - adventour-nginx-proxy
+    networks:
+      - app-network
+    command: certonly --webroot --webroot-path=/var/www/html \
+      --email gaonkar.tushar01@gmail.com --agree-tos --no-eff-email --staging -d adventour.live \
+      -d www.adventour.live
+
+volumes:
+  certbot-etc:
+  certbot-var:
+  web-root:
+
+networks:
+  app-network:
+    driver: bridge
