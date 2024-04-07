@@ -16,7 +16,7 @@ mongoose
   .then(() => {
     console.log('Mongo-AtlasDB connection successful..👍🏻');
   })
-  .catch((error) => console.log(error));
+  .catch((error: Error) => console.log(error));
 
 const port = process.env.PORT || 2000;
 
