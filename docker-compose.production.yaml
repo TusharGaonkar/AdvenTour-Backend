@@ -31,36 +31,28 @@ services:
   adventour-nginx-proxy:
     image: nginx:mainline-alpine
     container_name: adventour-nginx-proxy
-    restart: unless-stopped
     ports:
       - '80:80'
+      - '443:443'
+    restart: unless-stopped
     volumes:
-      - web-root:/var/www/html
-      - ./nginx-conf:/etc/nginx/conf.d
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - app-network
     depends_on:
       - adventour-backend
-    networks:
-      - app-network
 
+# disabled by default , use --profile gen-cert while building docker-compose
   certbot:
     image: certbot/certbot
+    profiles: ["gen-cert"]
     container_name: certbot
     volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - web-root:/var/www/html
-    depends_on:
-      - adventour-nginx-proxy
-    networks:
-      - app-network
-    command: certonly --webroot --webroot-path=/var/www/html --email gaonkar.tushar01@gmail.com --agree-tos --no-eff-email -d adventour.live -d www.adventour.live
-
-volumes:
-  certbot-etc:
-  certbot-var:
-  web-root:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot --email gaonkar.tushar01@gmail.com -d adventour.live -d www.adventour.live --agree-tos
 
 networks:
   app-network:
