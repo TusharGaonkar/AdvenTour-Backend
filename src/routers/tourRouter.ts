@@ -6,6 +6,8 @@ import {
   getTourCost,
   getTourWithId,
   updateTourWithId,
+  getTopReviews,
+  getTopTours
 } from '../controllers/tourController';
 
 import requiresAuthentication from '../middlewares/authenticationHandler';
@@ -26,11 +28,15 @@ tourRouter
     createSingleTour
   );
 
-// search autocomplete route!
+// Search autocomplete route!
 tourRouter.route('/suggestions').get(searchSuggestionsController);
 
 tourRouter.route('/getTourCost').get(getTourCost);
 tourRouter.route('/getSimilarTours').get(getSimilarTours);
+
+// For Adventour landing page
+tourRouter.route('/topTours').get(getTopTours);
+tourRouter.route('/topReviews').get(getTopReviews);
 
 //  *Place this below , else :tourID will be called for any route after tours/
 tourRouter
