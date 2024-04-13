@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import AdvenTourQueryBuilder from '../utils/adventourQueryBuilder';
 import apiClientErrorHandler from '../middlewares/apiClientErrorHandler';
 import AdventourAppError from '../utils/adventourAppError';
-import BookMarkedTours from '../models/bookmarkToursModel';
+import TourReviews from '../models/tourReviewsModel';
 
 interface User {
   _id: string;
@@ -57,7 +57,7 @@ export const getAllTours = apiClientErrorHandler(
   }
 );
 
-//get a single tour with an id
+//  Get a single tour with an id
 export const getTourWithId = apiClientErrorHandler(
   async (req: Request, res: Response) => {
     const { tourID } = req.params;
@@ -75,7 +75,7 @@ export const getTourWithId = apiClientErrorHandler(
   }
 );
 
-//update a single tour with an id
+//  Update a single tour with an id
 export const updateTourWithId = apiClientErrorHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -90,21 +90,6 @@ export const updateTourWithId = apiClientErrorHandler(
       data: {
         tour,
       },
-    });
-  }
-);
-
-// delete a single tour with an id
-export const deleteTourWithId = apiClientErrorHandler(
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const deletedTour = await Tour.findByIdAndDelete(id);
-
-    if (!deletedTour) throw new Error(`Tour with id ${id} not found`);
-
-    res.status(204).json({
-      status: 'success',
-      data: null,
     });
   }
 );
@@ -162,6 +147,79 @@ export const getTourCost = apiClientErrorHandler(
         bookingFor: parseInt(peopleCount, 10),
         selectedDate: new Date(startDate).toDateString(),
       },
+    });
+  }
+);
+
+// Delete a single tour with an ID
+export const deleteTourWithId = apiClientErrorHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const deletedTour = await Tour.findByIdAndDelete(id);
+
+    if (!deletedTour) throw new Error(`Tour with id ${id} not found`);
+
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  }
+);
+
+//  Get top reviews for the landing page
+export const getTopTours = apiClientErrorHandler(
+  async (req: Request, res: Response) => {
+    const { limit = 3 } = req.query || {};
+
+    if (isNaN(parseInt(limit as string, 10))) {
+      throw new AdventourAppError('Please provide a valid limit', 400);
+    }
+
+    const topTours = await Tour.find({})
+      .select(
+        '_id title mainCoverImage priceInRupees totalRatings ratingsAverage'
+      )
+      .sort({ratingsAverage: -1 , totalRatings : -1 })
+      .limit(parseInt(limit as string, 10));
+
+    if (!topTours) throw new AdventourAppError('Something went wrong', 500);
+
+    res.status(200).json({
+      status: 'success',
+      totalResults : topTours.length,
+       topTours,
+    });
+  }
+);
+
+//  Get Top reviews for the landing page
+export const getTopReviews = apiClientErrorHandler(
+  async (req: Request, res: Response) => {
+    const { limit = 10 } = req.query || {};
+    if (isNaN(parseInt(limit as string, 10))) {
+      throw new AdventourAppError('Please provide a valid limit', 400);
+    }
+
+    const topReviews = await TourReviews.find({})
+      .populate({
+        path: 'user',
+        select: 'userName avatar -_id',
+      })
+      .select('-reviewImages')
+      .sort({
+        rating: -1,
+        createdAt: -1,
+      })
+      .limit(parseInt(limit as string, 10));
+
+    if (!topReviews) {
+      throw new AdventourAppError('Something went wrong', 500);
+    }
+
+    res.status(200).json({
+      status: 'success',
+      totalResults: topReviews.length,
+      topReviews,
     });
   }
 );
