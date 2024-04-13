@@ -1,6 +1,6 @@
 import express from 'express';
 import passport from '../authentication/passport';
-import AdventourAppError from '../utils/adventourAppError';
+import { Request , Response, NextFunction } from 'express'
 import { HydratedDocument } from 'mongoose';
 import { loginUser, logoutUser } from '../controllers/loginUserController';
 import loginAdmin from '../controllers/loginAdminController';
@@ -28,7 +28,7 @@ authenticateRouter.route('/google').get(
 
 // On google login success
 authenticateRouter.route('/google/callback').get(
-  (req, res, next) => {
+  (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate(
       'google',
       {
@@ -37,14 +37,14 @@ authenticateRouter.route('/google/callback').get(
       },
       (error, user) => {
         if (error || !user) {
-          return res.redirect(`${process.env.BASE_URL}/login`);
+          return res.redirect(`${process.env.FRONTEND_BASE_URL}/login`);
         }
         req.user = user;
         next();
       }
     )(req, res, next);
   },
-  (req, res) => {
+  (req: Request , res: Response) => {
     const user: HydratedDocument<any> = req.user;
     const token = user.generateJwtToken();
 
@@ -53,14 +53,16 @@ authenticateRouter.route('/google/callback').get(
       sameSite: 'none',
       secure: true,
       expires: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+      domain : `.${process.env.BACKEND_BASE_URL}`,
+      path : '/'
     });
 
-    res.redirect(process.env.BASE_URL);
+    res.redirect(process.env.FRONTEND_BASE_URL);
   }
 );
 
-authenticateRouter.route('/google/failure').get((req, res, next) => {
-  res.redirect(`${process.env.BASE_URL}/login`);
+authenticateRouter.route('/google/failure').get((req: Request, res: Response, next: NextFunction) => {
+  res.redirect(`${process.env.FRONTEND_BASE_URL}/login`);
 });
 
 authenticateRouter.route('/forgotPassword').post(addForgotPasswordJob);
