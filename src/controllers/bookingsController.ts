@@ -297,7 +297,7 @@ export const paymentVerification = apiClientErrorHandler(
         }
       });
 
-      res.redirect('http://localhost:5173/bookings');
+      res.redirect(`${process.env.BASE_URL}/bookings`);
     } catch (error) {
       throw new AdventourAppError(
         error.message || 'Internal server error',

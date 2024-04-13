@@ -34,6 +34,8 @@ const loginAdmin = apiClientErrorHandler(
       sameSite: 'none',
       secure: true, // can't be read in the client side javascript ; prevent cross-site scripting and token stealing!
       expires: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // current expiration in 15 days in ms!
+      domain: `${process.env.BACKEND_BASE_URL}`,
+      path: '/'
     });
 
     const user = await Users.findOne({ email });

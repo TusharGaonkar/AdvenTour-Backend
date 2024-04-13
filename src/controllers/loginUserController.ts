@@ -37,6 +37,8 @@ const loginUser = apiClientErrorHandler(async (req: Request, res: Response) => {
     sameSite: 'none',
     secure: true, // can't be read in the client side javascript ; prevent cross-site scripting and token stealing!
     expires: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // current expiration in 15 days in ms!
+    domain: `.${process.env.BACKEND_BASE_URL}`,
+    path: '/'
   });
 
   const user = await Users.findOne({ email });
@@ -51,7 +53,17 @@ const loginUser = apiClientErrorHandler(async (req: Request, res: Response) => {
 
 const logoutUser = apiClientErrorHandler(
   async (req: Request, res: Response) => {
-    res.status(200).clearCookie(process.env.JWT_TOKEN_KEY).json({
+    res.cookie(process.env.JWT_TOKEN_KEY ,"", {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
+      expires: new Date(0),
+      domain: `.${process.env.BACKEND_BASE_URL}`, 
+      path : '/'
+    }
+  )
+
+   return res.status(200).json({
       status: 'success',
       message: 'User Logged Out',
     });
