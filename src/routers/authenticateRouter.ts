@@ -53,7 +53,7 @@ authenticateRouter.route('/google/callback').get(
       sameSite: 'none',
       secure: true,
       expires: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-      domain : `.${process.env.BACKEND_BASE_URL}`,
+      domain : `.${process.env.BACKEND_DOMAIN}`,
       path : '/'
     });
 
