@@ -17,5 +17,8 @@
 # Built Visual Studio Code Extensions
 *.vsix
 
-#ssl certificates
+# ssl certificates
 /certbot/
+
+# environment configurations 
+*.env
