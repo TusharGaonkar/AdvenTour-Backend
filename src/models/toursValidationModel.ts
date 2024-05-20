@@ -16,9 +16,11 @@ const toursValidationSchema = new mongoose.Schema({
 
   verificationDate: {
     type: Date,
-    required: true,
-    default: Date.now,
+    required: function(){
+       return this?.isVerified === true;
+    }
   },
+  
   isRejected: {
     type: Boolean,
     default: false,
