@@ -17,7 +17,7 @@ export const cancelAndRefundBooking = apiClientErrorHandler(
         }
 
         const booking = await Bookings.findOneAndUpdate(
-          { _id: bookingID, status: 'confirmed', isRefunded: false },
+          { _id: bookingID, isRefunded: false },
           {
             status: 'cancelled',
             isRefunded: true,
@@ -25,7 +25,7 @@ export const cancelAndRefundBooking = apiClientErrorHandler(
         ).session(session);
 
         if (!booking) {
-          throw new AdventourAppError('Booking not found', 404);
+          throw new AdventourAppError('No bookings found with the given id', 404);
         }
 
         const refundStatus: any = await razorpayInstance.payments.refund(
