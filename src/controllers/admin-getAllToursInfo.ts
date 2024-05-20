@@ -5,7 +5,11 @@ import ToursValidation from '../models/toursValidationModel';
 
 export const getTourWithID = apiClientErrorHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const tour = await ToursValidation.findById(req.params.id);
+    const tour = await ToursValidation.findById(req.params.id).populate({
+       path: 'createdBy',
+       select: '-_id email userName',
+    });
+
     if (!tour) {
       throw new AdventourAppError('Tour not found', 404);
     }
