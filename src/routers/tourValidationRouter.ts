@@ -9,7 +9,7 @@ tourValidationRouter
   .route('/')
   .post(
     requiresAuthentication,
-    requiresAuthorization(['admin', 'user']),
+    requiresAuthorization(['user','local-guide']),
     processNewToursJob
   );
 
