@@ -38,14 +38,13 @@ export const acceptTour = apiClientErrorHandler(
           {
             $set: {
               isAccepted: true,
+              isRejected: false,
               isVerified: true,
-              $currentDate: {
-                verificationDate: true,
-              },
               cancellationPolicy,
               tourCategory,
               adminName,
               additionalInformation,
+              verificationDate: new Date().toISOString(),
             },
           },
           {
@@ -116,9 +115,7 @@ export const rejectTour = apiClientErrorHandler(
             isVerified: true,
             tourRemarks,
             adminName,
-            $currentDate: {
-              verificationDate: true,
-            },
+            verificationDate: new Date().toISOString(),
           },
         }
       );
