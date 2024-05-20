@@ -46,6 +46,8 @@ services:
 
 # disabled by default , use --profile gen-cert while building docker-compose
   certbot:
+    depends_on:
+      - adventour-nginx-proxy
     image: certbot/certbot
     profiles: ["gen-cert"]
     container_name: certbot
