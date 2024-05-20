@@ -24,7 +24,7 @@ tourRouter
   .get(optionalAuthentication, getAllTours)
   .post(
     requiresAuthentication,
-    requiresAuthorization(['user', 'admin']),
+    requiresAuthorization(['user', 'admin' , 'local-guide']),
     createSingleTour
   );
 
