@@ -80,6 +80,14 @@ export default class AdvenTourQueryBuilder {
       delete query.tourDurationInDays;
     }
 
+    // Handle quering for tours with given start dates
+    if(query && 
+      query.tourStartDates && 
+      typeof query.tourStartDates['eq'] === 'string'
+    ) {
+      query['tourStartDates'] = new Date(query.tourStartDates['eq']);
+    }
+
     this.pipeline.push({
       $match: query,
     });
