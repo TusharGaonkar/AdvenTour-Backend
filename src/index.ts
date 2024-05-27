@@ -1,3 +1,4 @@
+import {Request , Response} from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -74,6 +75,13 @@ app.use(cookieParser()); // need to parse cookies in req.cookies
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(addRequestTime);
+
+app.get('/api/v-1.0' , (req: Request,res: Response)=>{
+  return res.status(200).json({
+    status : "success",
+    message : `The server is up at ${new Date().toDateString()}`
+  })
+})
 
 app.use('/api/v-1.0/auth', authenticateRouter);
 app.use('/api/v-1.0/tours', tourRouter);
