@@ -168,10 +168,6 @@ export const getTourReviews = apiClientErrorHandler(
 
     const totalPages = Math.ceil(totalReviews / limit);
 
-    if (pageInt > totalPages) {
-      throw new AdventourAppError('Page not found!', 404);
-    }
-
     const skip = (pageInt - 1) * limit;
 
     const tourReviews = await TourReviews.find({ tour: tourID })
