@@ -41,7 +41,7 @@ export const forgotPassword = async (job: Job) => {
     if (!updatedResetTokenWithExpiry)
       throw new AdventourAppError('Something went wrong', 500);
 
-    const baseURL = process.env.BASE_URL;
+    const baseURL = process.env.FRONTEND_BASE_URL;
     const resetPasswordLink = `${baseURL}/resetPassword?token=${randomTokenString}`;
 
     const html = render(
