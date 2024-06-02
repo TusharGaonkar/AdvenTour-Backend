@@ -42,27 +42,9 @@ app.use(helmet());
 app.use(helmet.xssFilter());
 app.use(mongoSanitize());
 
-/* Adding rate limiting to prevent DDOS attacks
-const rateLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 400, // max  requests from same IP per minute
-  message:
-    'IP address has been blocked due to too many requests, please try again later!',
-});
-app.use(rateLimiter);
-*/
-
-// Setup logger for development & production
-const accessLogStream = fs.createWriteStream(
-  path.join(__dirname, 'adventour-access.log'),
-  { flags: 'a' }
-);
-
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev', { stream: accessLogStream }));
-} else {
-  app.use(morgan('combined', { stream: accessLogStream }));
-}
+// if (process.env.NODE_ENV === 'development') {
+//   app.use(morgan('dev'));
+// }
 
 app.use(
   cors({
